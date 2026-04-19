@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0a0912">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>HypeToGo</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+--bg:#0a0912;--bg2:#110f20;--bg3:#181528;
+--purple:#7c3aed;--pl:#9d5cf6;--accent:#c084fc;
+--green:#10b981;--red:#ef4444;--orange:#f97316;
+--blue:#3b82f6;--teal:#06b6d4;
+--text:#f0eeff;--text2:#a89fc8;--text3:#6b628a;
+--border:#2d2850;--border2:#3d3660;
+--nh:72px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'DM Sans',sans-serif}
+#app{width:100%;max-width:430px;height:100dvh;margin:0 auto;position:relative;overflow:hidden;background:var(--bg)}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);overflow:hidden}
+.screen.active{display:flex;animation:fi .22s ease}
+@keyframes fi{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.sa{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sa::-webkit-scrollbar{display:none}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:36px;background:linear-gradient(135deg,#a78bfa,#7c3aed,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.btn{width:100%;padding:16px 24px;border-radius:50px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s}
+.btn:active{transform:scale(.97)}
+.bp{background:linear-gradient(135deg,#7c3aed,#9d5cf6);color:#fff;box-shadow:0 0 28px rgba(124,58,237,.35)}
+.bs{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+.bg_{background:#1a1528;color:var(--text);border:1px solid var(--border)}
+.bd{background:#7f1d1d;color:#fff}
+.bo{background:transparent;color:var(--pl);border:1.5px solid var(--purple)}
+.inp{width:100%;padding:15px 18px;background:var(--bg3);border:1.5px solid var(--border);border-radius:14px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border .2s}
+.inp:focus{border-color:var(--pl)}
+.inp::placeholder{color:var(--text3)}
+.ttog{display:flex;background:var(--bg3);border-radius:50px;border:1px solid var(--border);padding:4px}
+.tb{flex:1;padding:12px;border-radius:50px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;transition:all .25s;color:var(--text2);background:transparent}
+.tb.act{background:linear-gradient(135deg,#7c3aed,#9d5cf6);color:#fff;box-shadow:0 2px 12px rgba(124,58,237,.4)}
+.nb{height:var(--nh);padding-bottom:env(safe-area-inset-bottom,0);background:rgba(18,15,32,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:center;flex-shrink:0;border-radius:28px 28px 0 0}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:8px 4px;color:var(--text3);transition:color .2s}
+.ni.act{color:var(--pl)}
+.ni svg{width:22px;height:22px}
+.nl{font-size:11px;font-weight:500}
+.tbar{display:flex;align-items:center;padding:56px 20px 16px;flex-shrink:0}
+.ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:var(--text);flex:1;text-align:center}
+.bk{width:40px;height:40px;background:var(--bg3);border-radius:12px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex-shrink:0;font-size:18px}
+.ta{background:var(--purple);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer}
+.nb2{width:40px;height:40px;background:var(--bg3);border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.nd{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%}
+.div{display:flex;align-items:center;gap:12px;color:var(--text3);font-size:13px}
+.div::before,.div::after{content:'';flex:1;height:1px;background:var(--border)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);transition:all .2s;white-space:nowrap;background:var(--bg3);color:var(--text2)}
+.chip.act{background:var(--purple);color:#fff;border-color:var(--purple)}
+.badge{display:inline-block;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.br{background:var(--red);color:#fff}
+.bg2{background:var(--green);color:#fff}
+.sec{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase;margin:20px 0 10px}
+.mi{display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;margin-bottom:8px;cursor:pointer;color:var(--text)}
+.mil{display:flex;align-items:center;gap:12px;font-size:15px;font-weight:500}
+.nbd{background:var(--red);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:20px}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:100;transition:opacity .4s}
+.ld{width:8px;height:8px;border-radius:50%;background:var(--purple);animation:dp 1.2s infinite}
+.ld:nth-child(2){animation-delay:.2s}.ld:nth-child(3){animation-delay:.4s}
+@keyframes dp{0%,100%{transform:scale(.7);opacity:.5}50%{transform:scale(1);opacity:1}}
+.ec{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:14px;background:var(--bg3);border:1px solid var(--border);margin-bottom:10px;cursor:pointer}
+.ei{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.et{font-weight:600;font-size:14px;color:var(--text)}
+.em{font-size:12px;color:var(--text3);margin-top:2px}
+.er{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.nc{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:16px;background:var(--bg3);border:1px solid var(--border);margin-bottom:10px;position:relative}
+.nc.un{border-color:var(--purple);background:rgba(124,58,237,.08)}
+.ndi{position:absolute;left:-5px;top:50%;transform:translateY(-50%);width:10px;height:10px;border-radius:50%;background:var(--pl);display:none}
+.nc.un .ndi{display:block}
+.ni2{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.nt{font-weight:600;font-size:14px;color:var(--text)}
+.ns{font-size:12px;color:var(--text3);margin-top:2px}
+.nm{display:flex;align-items:center;gap:8px;margin-top:6px}
+.dh{height:220px;display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0}
+.dib{position:absolute;bottom:16px;left:20px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.dpb{position:absolute;top:60px;right:60px;background:rgba(18,15,32,.85);border:1px solid var(--border);border-radius:10px;padding:6px 10px;font-size:12px;color:var(--text);cursor:pointer}
+.dfb{position:absolute;top:60px;right:16px;width:40px;height:40px;background:rgba(18,15,32,.85);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:all .2s}
+.dfb.liked{background:rgba(239,68,68,.3);border-color:var(--red)}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.dib2{background:var(--bg3);border-radius:14px;padding:14px;border:1px solid var(--border)}
+.dil{font-size:12px;color:var(--text3)}
+.div2{font-size:18px;font-weight:700;color:var(--pl);margin-top:4px}
+.div2.g{color:var(--green)}
+.ob{background:var(--bg3);border-radius:16px;padding:16px;border:1px solid var(--border);margin-bottom:120px}
+.obt{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.qr{display:flex;align-items:center;justify-content:space-between}
+.qc{display:flex;align-items:center;gap:14px}
+.qb{width:32px;height:32px;border-radius:50%;background:var(--bg);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);font-size:18px}
+.qb:active{background:var(--purple)}
+.qn{font-size:20px;font-weight:700;color:var(--text);width:24px;text-align:center}
+.sb{position:absolute;bottom:var(--nh);left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,var(--bg) 30%)}
+.mo{position:absolute;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:24px;z-index:50}
+.mc{background:var(--bg3);border:1px solid var(--border);border-radius:24px;padding:32px 24px;width:100%;text-align:center}
+.ci{width:72px;height:72px;border-radius:20px;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px;color:#fff}
+.cr{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:16px;font-weight:700;color:var(--text);margin:16px 0;letter-spacing:1px}
+.ph{background:linear-gradient(180deg,rgba(124,58,237,.3) 0%,transparent 100%);padding:56px 20px 20px;flex-shrink:0}
+.pr{display:flex;align-items:center;gap:14px}
+.pa{width:70px;height:70px;border-radius:50%;background:var(--bg3);border:2.5px solid var(--pl);display:flex;align-items:center;justify-content:center;position:relative}
+.pad{position:absolute;bottom:3px;right:3px;width:12px;height:12px;background:var(--green);border-radius:50%;border:2px solid var(--bg)}
+.pn{font-family:'Syne',sans-serif;font-weight:700;font-size:22px;color:var(--text)}
+.pe{font-size:13px;color:var(--text3)}
+.pt{display:inline-flex;align-items:center;gap:4px;background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--accent);margin-top:10px}
+.ps{display:flex;gap:10px;margin-top:16px}
+.stb{flex:1;border-radius:14px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.stn{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff}
+.stl{font-size:12px;color:rgba(255,255,255,.8)}
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ct{border-radius:16px;padding:16px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;font-weight:700;font-size:15px;color:#fff;font-family:'Syne',sans-serif}
+.ct:active{transform:scale(.96)}
+.fr{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.fr::-webkit-scrollbar{display:none}
+.fc{padding:8px 18px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);color:var(--text2);background:var(--bg3);white-space:nowrap;transition:all .2s;flex-shrink:0}
+.fc.act{background:var(--purple);color:#fff;border-color:var(--purple)}
+.pc{border-radius:20px;padding:20px;border:1.5px solid var(--border);background:var(--bg3);margin-bottom:14px}
+.pc.ft{border-color:var(--purple);background:rgba(124,58,237,.08)}
+.pp{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;color:var(--pl)}
+.pp span{font-size:16px;color:var(--text3)}
+.pf{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:14px;color:var(--text2)}
+.pck{color:var(--green);flex-shrink:0}
+.oec{background:var(--bg3);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:10px;cursor:pointer;border-left:4px solid transparent}
+.oec.lv{border-left-color:var(--green)}
+.oec.dr{border-left-color:var(--orange)}
+.oei{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.oet{font-weight:700;font-size:15px;color:var(--text)}
+.oem{font-size:12px;color:var(--text3);margin-top:2px}
+.oes{font-size:11px;color:var(--text3);margin-top:4px}
+.oes span{color:var(--pl)}
+.lb{background:rgba(16,185,129,.15);color:var(--green);border:1px solid var(--green);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px;white-space:nowrap}
+.lbd{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pu 1.5s infinite}
+@keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+.alo{text-align:center;padding:32px 0 8px;font-family:'Syne',sans-serif;font-size:32px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#7c3aed,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sp{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer;color:var(--text);font-size:15px}
+.spl{display:flex;align-items:center;gap:12px;font-weight:500}
+.pl2{display:flex;align-items:center;gap:6px;background:var(--purple);color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;position:relative;white-space:nowrap}
+.dd{position:absolute;top:38px;right:0;z-index:20;background:var(--bg3);border:1px solid var(--border);border-radius:16px;overflow:hidden;min-width:220px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.do{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;cursor:pointer}
+.do.act{background:rgba(124,58,237,.15)}
+.do:hover{background:var(--bg2)}
+.rol{display:flex;align-items:center;gap:16px;padding:20px;border-radius:18px;background:var(--bg3);border:1.5px solid var(--border);cursor:pointer;margin-bottom:14px;transition:all .2s}
+.rol:active{transform:scale(.98);border-color:var(--purple)}
+.pub-g{margin-bottom:16px}
+.pub-l{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px}
+.pu2{background:var(--bg3);border:1.5px dashed var(--border);border-radius:14px;padding:32px;text-align:center;cursor:pointer;color:var(--text3);display:flex;flex-direction:column;align-items:center;gap:8px}
+/* Map */
+.map{flex:1;position:relative;overflow:hidden}
+.mb{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 40%,rgba(88,28,235,.15) 0%,transparent 60%),linear-gradient(180deg,#0d0b20,#0a0918)}
+.mg{position:absolute;inset:0;background-image:linear-gradient(rgba(124,58,237,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(124,58,237,.06) 1px,transparent 1px);background-size:40px 40px}
+.ml{position:absolute;font-size:11px;font-weight:600;color:rgba(168,159,200,.45);letter-spacing:1px;text-transform:uppercase}
+.mp{position:absolute;transform:translate(-50%,-50%);cursor:pointer}
+.mpd{width:12px;height:12px;border-radius:50%;border:2px solid #fff}
+.mpl{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:rgba(18,15,32,.95);border:1px solid var(--border);border-radius:8px;padding:3px 8px;font-size:10px;font-weight:600;color:var(--text);white-space:nowrap}
+.bsc{display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.bsc::-webkit-scrollbar{display:none}
+.bscard{width:178px;border-radius:16px;overflow:hidden;flex-shrink:0;cursor:pointer;transition:transform .15s}
+.bscard:active{transform:scale(.97)}
+.bsci{padding:12px;height:158px;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
+.bscat{font-size:10px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.5px}
+.bsti{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.2;margin-top:2px}
+.bsbot{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="logo" style="font-size:42px">HypeToGo</div>
+  <div style="display:flex;gap:6px"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+  <p style="color:var(--text3);font-size:14px">Paris · Hyperlocal Events</p>
+</div>
+<div id="app">
+
+<!-- CONNEXION -->
+<div class="screen active" id="s-cx">
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(88,28,235,.25),transparent 70%)"></div>
+  <div class="sa" style="padding:0 24px;display:flex;flex-direction:column;min-height:100%;position:relative">
+    <div style="padding-top:80px;text-align:center"><div class="logo">HypeToGo</div><p style="color:var(--text2);margin-top:12px;font-size:15px;line-height:1.5">Découvre les meilleurs évènements<br>autour de toi.</p></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 0 0">
+      <div class="ttog" style="margin-bottom:24px"><button class="tb act">Connexion</button><button class="tb" onclick="go('s-ir')">Inscription</button></div>
+      <div style="display:flex;flex-direction:column;gap:12px"><input class="inp" type="email" placeholder="Email"><input class="inp" type="password" placeholder="Mot de passe"></div>
+      <button class="btn bp" style="margin-top:20px" onclick="go('s-hu')">Se connecter →</button>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--text2);font-size:14px"><div style="width:20px;height:20px;border:1.5px solid var(--border2);border-radius:5px;cursor:pointer;flex-shrink:0"></div><span>Restez connecté</span></div>
+      <div class="div" style="margin:24px 0">Ou</div>
+      <button class="btn bg_">Continuer avec Google</button>
+    </div>
+    <div style="height:40px"></div>
+  </div>
+</div>
+
+<!-- INSCRIPTION ROLE -->
+<div class="screen" id="s-ir">
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(88,28,235,.2),transparent 70%)"></div>
+  <div class="sa" style="padding:0 24px;position:relative">
+    <div style="padding-top:56px;display:flex;align-items:center;gap:12px;margin-bottom:8px"><div class="bk" onclick="go('s-cx')">←</div><div class="logo" style="font-size:26px">HypeToGo</div></div>
+    <p style="color:var(--text2);text-align:center;margin-bottom:32px;font-size:15px">Découvre les meilleurs évènements<br>autour de toi.</p>
+    <div class="ttog" style="margin-bottom:32px"><button class="tb" onclick="go('s-cx')">Connexion</button><button class="tb act">Inscription</button></div>
+    <div class="rol" onclick="go('s-iu')"><div style="font-size:48px">🙋</div><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--text)">Je cherche des events</div><div style="font-size:13px;color:var(--text3);margin-top:4px;line-height:1.4">Découvre des concerts, soirées, expos, sports et bien plus près de toi</div></div></div>
+    <div class="rol" onclick="go('s-io')"><div style="font-size:48px">🎪</div><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:var(--text)">Je publie des events</div><div style="font-size:13px;color:var(--text3);margin-top:4px;line-height:1.4">Crée et gère tes évènements, touche des milliers de personne à Paris</div></div></div>
+    <p style="text-align:center;color:var(--text3);margin-top:24px;font-size:14px">Déjà un compte ? <span style="color:var(--text);font-weight:700;cursor:pointer" onclick="go('s-cx')">Se connecter</span></p>
+  </div>
+</div>
+
+<!-- INSCRIPTION USER -->
+<div class="screen" id="s-iu">
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(88,28,235,.2),transparent 70%)"></div>
+  <div class="sa" style="padding:0 24px;position:relative">
+    <div style="padding-top:56px;display:flex;align-items:center;gap:12px;margin-bottom:8px"><div class="bk" onclick="go('s-ir')">←</div><div class="logo" style="font-size:26px">HypeToGo</div></div>
+    <p style="color:var(--text2);text-align:center;margin-bottom:24px;font-size:15px">Découvre les meilleurs évènements<br>autour de toi.</p>
+    <div class="ttog" style="margin-bottom:24px"><button class="tb">Connexion</button><button class="tb act">Inscription</button></div>
+    <div style="display:flex;flex-direction:column;gap:12px"><input class="inp" placeholder="Nom"><input class="inp" placeholder="Prénom"><input class="inp" type="email" placeholder="Email"><input class="inp" type="password" placeholder="Mot de passe"></div>
+    <button class="btn bp" style="margin-top:24px" onclick="go('s-hu')">S'inscrire →</button>
+    <div class="div" style="margin:20px 0">Ou</div>
+    <button class="btn bg_" style="margin-bottom:40px">Continuer avec Google</button>
+  </div>
+</div>
+
+<!-- INSCRIPTION ORGA -->
+<div class="screen" id="s-io">
+  <div style="position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(88,28,235,.2),transparent 70%)"></div>
+  <div class="sa" style="padding:0 24px;position:relative">
+    <div style="padding-top:56px;display:flex;align-items:center;gap:12px;margin-bottom:8px"><div class="bk" onclick="go('s-ir')">←</div><div class="logo" style="font-size:26px">HypeToGo</div></div>
+    <p style="color:var(--text2);text-align:center;margin-bottom:24px;font-size:15px">Découvre les meilleurs évènements<br>autour de toi.</p>
+    <div class="ttog" style="margin-bottom:24px"><button class="tb">Connexion</button><button class="tb act">Inscription</button></div>
+    <div style="display:flex;flex-direction:column;gap:12px"><input class="inp" type="email" placeholder="Email"><input class="inp" type="password" placeholder="Mot de passe"><input class="inp" placeholder="Nom entreprise*"><input class="inp" placeholder="Numéro de Siret*"></div>
+    <button class="btn bp" style="margin-top:24px" onclick="go('s-ho')">Se connecter →</button>
+    <div class="div" style="margin:20px 0">Ou</div>
+    <button class="btn bg_" style="margin-bottom:40px">Continuer avec Google</button>
+  </div>
+</div>
+
+<!-- HOME USER -->
+<div class="screen" id="s-hu">
+  <div style="padding:56px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div class="logo" style="font-size:28px">HypeToGo</div>
+    <div class="nb2" onclick="go('s-nu')">🔔<div class="nd"></div></div>
+  </div>
+  <div style="padding:0 16px 12px;flex-shrink:0">
+    <div style="position:relative;margin-bottom:12px" onclick="go('s-se')"><input class="inp" placeholder="Rechercher un évènement..." readonly style="cursor:pointer;padding-right:80px"><button style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--purple);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:600">Filtres</button></div>
+    <div id="chips-hu" style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px">
+      <div class="chip act" onclick="chipSel(this,'chips-hu')">✦ Tout</div>
+      <div class="chip" onclick="chipSel(this,'chips-hu')">🎵 Concerts</div>
+      <div class="chip" onclick="chipSel(this,'chips-hu')">🎤 Stand-Up</div>
+      <div class="chip" onclick="chipSel(this,'chips-hu')">🍺 Bars</div>
+      <div class="chip" onclick="chipSel(this,'chips-hu')">🎭 Théâtre</div>
+      <div class="chip" onclick="chipSel(this,'chips-hu')">⚽ Sport</div>
+      <div class="chip" onclick="chipSel(this,'chips-hu')">🎮 E-Sport</div>
+    </div>
+  </div>
+  <div class="map" style="flex:1;position:relative">
+    <div class="mb"></div><div class="mg"></div>
+    <div class="ml" style="top:18%;left:6%">BELLEVILLE</div>
+    <div class="ml" style="top:36%;left:22%">MÉNILMONTANT</div>
+    <div class="ml" style="top:54%;left:4%">11TH ARR.</div>
+    <div class="ml" style="top:52%;right:6%">20TH ARR.</div>
+    <div class="ml" style="top:70%;right:18%">CHARONNE</div>
+    <div style="position:absolute;top:33%;left:0;right:0;height:2px;background:rgba(124,58,237,.1);transform:rotate(-3deg)"></div>
+    <div style="position:absolute;top:14%;left:28%;bottom:8%;width:2px;background:rgba(124,58,237,.08);transform:rotate(4deg)"></div>
+    <div class="mp" style="top:34%;left:27%" onclick="go('s-dd')"><div class="mpl">🎵 45€</div><div class="mpd" style="background:#7c3aed;box-shadow:0 0 10px #7c3aed"></div></div>
+    <div class="mp" style="top:52%;left:52%" onclick="go('s-dp')"><div class="mpl">⚽ 89€</div><div class="mpd" style="background:#3b82f6;box-shadow:0 0 10px #3b82f6"></div></div>
+    <div class="mp" style="top:24%;left:62%" onclick="go('s-ds')"><div class="mpl">🍺 0€</div><div class="mpd" style="background:#d97706;box-shadow:0 0 10px #d97706"></div></div>
+    <div class="mp" style="top:62%;left:20%" onclick="go('s-dk')"><div class="mpl">🎤 20€</div><div class="mpd" style="background:#dc2626;box-shadow:0 0 10px #dc2626"></div></div>
+    <div class="mp" style="top:42%;left:72%" onclick="go('s-dso')"><div class="mpl">🎮 55€</div><div class="mpd" style="background:#06b6d4;box-shadow:0 0 10px #06b6d4"></div></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:0 16px 16px">
+      <div style="width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 12px"></div>
+      <div class="bsc">
+        <div class="bscard" onclick="go('s-dd')"><div class="bsci" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)"><div style="position:absolute;top:10px;right:10px"><span class="badge br">Ce soir</span></div><div style="font-size:34px;text-align:center;margin-bottom:8px">🎵</div><div class="bscat">CONCERT</div><div class="bsti">Daft Punk Tribute Night</div><div class="bsbot"><span style="font-size:11px;color:rgba(255,255,255,.6)">1.2 Km</span><span style="font-size:14px;font-weight:700;color:#fff">45€</span></div></div></div>
+        <div class="bscard" onclick="go('s-dp')"><div class="bsci" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)"><div style="position:absolute;top:10px;right:10px"><span class="badge bg2">Demain</span></div><div style="font-size:34px;text-align:center;margin-bottom:8px">⚽</div><div class="bscat">FOOTBALL · LIGUE 1</div><div class="bsti">PSG vs Olympique de Marseille</div><div class="bsbot"><span style="font-size:11px;color:rgba(255,255,255,.6)">3.2 Km</span><span style="font-size:14px;font-weight:700;color:#fff">89€</span></div></div></div>
+        <div class="bscard" onclick="go('s-dk')"><div class="bsci" style="background:linear-gradient(135deg,#7f1d1d,#ef4444)"><div style="position:absolute;top:10px;right:10px"><span class="badge br">Ce soir</span></div><div style="font-size:34px;text-align:center;margin-bottom:8px">🎤</div><div class="bscat">STAND-UP</div><div class="bsti">Kyan Khojandi</div><div class="bsbot"><span style="font-size:11px;color:rgba(255,255,255,.6)">3.7 Km</span><span style="font-size:14px;font-weight:700;color:#fff">20€</span></div></div></div>
+      </div>
+    </div>
+  </div>
+  <nav class="nb">
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+    <div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span class="nl">Listes</span></div>
+    <div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+    <div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div>
+    <div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- HOME ORGA -->
+<div class="screen" id="s-ho">
+  <div style="padding:56px 20px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div class="logo" style="font-size:28px">HypeToGo</div>
+    <div style="display:flex;gap:8px;align-items:center"><button class="btn bp" style="width:auto;padding:10px 16px;font-size:14px" onclick="go('s-pub')">✏️ Publier</button><div class="nb2" onclick="go('s-no')">🔔<div class="nd"></div></div></div>
+  </div>
+  <div style="padding:0 16px 12px;flex-shrink:0" onclick="go('s-me')"><input class="inp" value="Voir mes évènements ..." readonly style="cursor:pointer"></div>
+  <div class="map" style="flex:1;position:relative">
+    <div class="mb"></div><div class="mg"></div>
+    <div class="ml" style="top:20%;left:6%">BELLEVILLE</div>
+    <div class="ml" style="top:38%;left:24%">MÉNILMONTANT</div>
+    <div class="ml" style="top:55%;right:6%">20TH ARR.</div>
+    <div class="mp" style="top:38%;left:36%" onclick="go('s-dd')"><div class="mpl">🎵 Mon event</div><div class="mpd" style="background:#7c3aed;box-shadow:0 0 10px #7c3aed"></div></div>
+  </div>
+  <nav class="nb">
+    <div class="ni" onclick="go('s-pub')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div>
+    <div class="ni" onclick="go('s-me')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nl">Plans</span></div>
+    <div class="ni" onclick="go('s-ao')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div>
+    <div class="ni" onclick="go('s-po')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- LISTE -->
+<div class="screen" id="s-li">
+  <div class="tbar" style="justify-content:space-between"><div class="bk" onclick="go('s-hu')">←</div><div class="ttl">Liste</div><button class="ta">Tout voir</button></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 20px 8px;flex-shrink:0">
+    <span style="font-size:14px;font-weight:600;color:var(--text2)">12 évènements</span>
+    <div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--text3)">TRIER PAR</span>
+      <div class="pl2" onclick="toggleDD()">📍 <span id="sort-label">Distance</span> ▾
+        <div class="dd" id="sort-dd" style="display:none" onclick="event.stopPropagation()">
+          <div class="do act" onclick="setSort('Distance')"><div style="display:flex;align-items:center;gap:8px"><span>📍</span><div><div style="font-size:14px;font-weight:600;color:var(--text)">Distance</div><div style="font-size:11px;color:var(--text3)">Le plus proche en premier</div></div></div><span style="color:var(--purple)">✓</span></div>
+          <div class="do" onclick="setSort('Date')"><div style="display:flex;align-items:center;gap:8px"><span>📅</span><div><div style="font-size:14px;font-weight:600;color:var(--text)">Date</div><div style="font-size:11px;color:var(--text3)">Du plus récent au plus ancien</div></div></div></div>
+          <div class="do" onclick="setSort('Tendance')"><div style="display:flex;align-items:center;gap:8px"><span>🔥</span><div><div style="font-size:14px;font-weight:600;color:var(--text)">Tendance</div><div style="font-size:11px;color:var(--text3)">Les plus populaires du moment</div></div></div></div>
+          <div class="do" onclick="setSort('Prix')"><div style="display:flex;align-items:center;gap:8px"><span>💰</span><div><div style="font-size:14px;font-weight:600;color:var(--text)">Prix</div><div style="font-size:11px;color:var(--text3)">Du moins cher au plus cher</div></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sa" style="padding:4px 20px 20px">
+    <div onclick="go('s-dd')" style="border-radius:18px;overflow:hidden;margin-bottom:12px;cursor:pointer"><div style="padding:16px;background:linear-gradient(135deg,#5b21b6,#7c3aed);display:flex;flex-direction:column;gap:8px;min-height:110px;justify-content:space-between"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">🎵</div><div style="display:flex;gap:8px;align-items:center"><span class="badge br">Ce soir</span><button class="btn" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:34px;height:34px;padding:0;color:#fff;font-size:16px">♡</button></div></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff">Daft Punk Tribute Night</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:rgba(255,255,255,.7)">L'Olympia, Paris 9ème · 1.2 km</div><span style="background:rgba(0,0,0,.3);color:rgba(255,255,255,.9);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Concert</span></div><div style="font-size:18px;font-weight:700;color:#fff">45€</div></div></div></div>
+    <div onclick="go('s-dv')" style="border-radius:18px;overflow:hidden;margin-bottom:12px;cursor:pointer"><div style="padding:16px;background:linear-gradient(135deg,#065f46,#059669);display:flex;flex-direction:column;gap:8px;min-height:110px;justify-content:space-between"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">🎨</div><div style="display:flex;gap:8px;align-items:center"><span class="badge bg2">Demain</span><button class="btn" style="background:rgba(239,68,68,.3);border:none;border-radius:50%;width:34px;height:34px;padding:0;color:#ff4444;font-size:16px">♥</button></div></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff">Victor Hugo - Décorateur</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:rgba(255,255,255,.7)">Musée du Louvre · 1.2 km</div><span style="background:rgba(0,0,0,.3);color:rgba(255,255,255,.9);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Expo</span></div><div style="font-size:18px;font-weight:700;color:#fff">89€</div></div></div></div>
+    <div onclick="go('s-dk')" style="border-radius:18px;overflow:hidden;margin-bottom:12px;cursor:pointer"><div style="padding:16px;background:linear-gradient(135deg,#7f1d1d,#dc2626);display:flex;flex-direction:column;gap:8px;min-height:110px;justify-content:space-between"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">🎤</div><div style="display:flex;gap:8px;align-items:center"><span class="badge br">Ce soir</span><button class="btn" style="background:rgba(239,68,68,.3);border:none;border-radius:50%;width:34px;height:34px;padding:0;color:#ff4444;font-size:16px">♥</button></div></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff">Kyan Khojandi</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:rgba(255,255,255,.7)">L'Olympia, Paris 9ème · 1.2 km</div><span style="background:rgba(0,0,0,.3);color:rgba(255,255,255,.9);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Spectacle</span></div><div style="font-size:18px;font-weight:700;color:#fff">20€</div></div></div></div>
+    <div onclick="go('s-dp')" style="border-radius:18px;overflow:hidden;margin-bottom:12px;cursor:pointer"><div style="padding:16px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);display:flex;flex-direction:column;gap:8px;min-height:110px;justify-content:space-between"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">⚽</div><div style="display:flex;gap:8px;align-items:center"><span class="badge br">Ce soir</span><button class="btn" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:34px;height:34px;padding:0;color:#fff;font-size:16px">♡</button></div></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff">PSG vs Olympique de Marseille</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:rgba(255,255,255,.7)">Parc des Princes · 1.8 km</div><span style="background:rgba(0,0,0,.3);color:rgba(255,255,255,.9);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Sport</span></div><div style="font-size:18px;font-weight:700;color:#fff">35€</div></div></div></div>
+    <div onclick="go('s-ds')" style="border-radius:18px;overflow:hidden;margin-bottom:12px;cursor:pointer"><div style="padding:16px;background:linear-gradient(135deg,#78350f,#d97706);display:flex;flex-direction:column;gap:8px;min-height:110px;justify-content:space-between"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">🍺</div><div style="display:flex;gap:8px;align-items:center"><span class="badge br">Ce soir</span><button class="btn" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:34px;height:34px;padding:0;color:#fff;font-size:16px">♡</button></div></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff">Stand'art Café</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:rgba(255,255,255,.7)">Ménilmontant · 1.2 km</div><span style="background:rgba(0,0,0,.3);color:rgba(255,255,255,.9);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Bar & Soirée</span></div><div style="font-size:18px;font-weight:700;color:#fff">0€</div></div></div></div>
+    <div onclick="go('s-dso')" style="border-radius:18px;overflow:hidden;margin-bottom:12px;cursor:pointer"><div style="padding:16px;background:linear-gradient(135deg,#0e7490,#06b6d4);display:flex;flex-direction:column;gap:8px;min-height:110px;justify-content:space-between"><div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:20px">🎮</div><div style="display:flex;gap:8px;align-items:center"><span class="badge br">Ce soir</span><button class="btn" style="background:rgba(255,255,255,.15);border:none;border-radius:50%;width:34px;height:34px;padding:0;color:#fff;font-size:16px">♡</button></div></div><div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff">Solary vs Gentlemate</div><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:rgba(255,255,255,.7)">L'Olympia, Paris 9ème · 1.2 km</div><span style="background:rgba(0,0,0,.3);color:rgba(255,255,255,.9);padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">Esport</span></div><div style="font-size:18px;font-weight:700;color:#fff">45€</div></div></div></div>
+  </div>
+  <nav class="nb">
+    <div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span class="nl">Listes</span></div>
+    <div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+    <div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div>
+    <div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- DETAIL TEMPLATE MACRO via JS - we write 5 detail screens inline -->
+
+<!-- DETAIL DAFT PUNK -->
+<div class="screen" id="s-dd">
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="dh" style="background:linear-gradient(135deg,#4c1d95,#7c3aed)">
+      <div class="bk" style="position:absolute;top:56px;left:20px" onclick="go('s-li')">←</div>
+      <div class="dpb">📷 3</div>
+      <div class="dfb" id="fav-dd" onclick="toggleFav('fav-dd')">♡</div>
+      <div style="font-size:72px">🎵</div>
+      <div class="dib" style="background:rgba(124,58,237,.3)">🎵</div>
+    </div>
+    <div class="sa"><div style="padding:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase">CONCERT</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--text);margin:6px 0 4px;line-height:1.1">Daft Punk Tribute Night</div>
+      <div style="font-size:14px;color:var(--pl)">📍 L'Olympia, Paris 9ème</div>
+      <div class="dg">
+        <div class="dib2"><div class="dil">📅 Date</div><div class="div2">Ce soir - 21h00</div></div>
+        <div class="dib2"><div class="dil">📍 Distance</div><div class="div2">1.2 Km</div></div>
+        <div class="dib2"><div class="dil">Prix / Place</div><div class="div2 g">45€</div></div>
+        <div class="dib2"><div class="dil">Place Dispo</div><div class="div2" style="color:var(--text)">32 Places</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px">La nuit ultime d'hommage aux maîtres de la French Touch. Lasers, visuals géants et son 360° pour une immersion totale dans l'univers de Daft Punk.</p>
+      <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">🔗 Site Officiel & Billeterie externe <span>→</span></div>
+      <div class="ob"><div class="obt">🎟️ Commander mes places</div><div class="qr"><div style="font-size:14px;color:var(--text)">Nombre de places</div><div class="qc"><div class="qb" onclick="qty('qn-dd',-1)">−</div><div class="qn" id="qn-dd">1</div><div class="qb" onclick="qty('qn-dd',1)">+</div></div></div><div style="font-size:12px;color:var(--text3);margin-top:8px">Prix unitaire <span style="color:var(--green);font-weight:700">45€</span></div></div>
+    </div></div>
+    <div class="sb"><button class="btn bp" onclick="go('s-conf')">Réserver ma place →</button></div>
+    <nav class="nb">
+      <div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+      <div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div>
+      <div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+      <div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div>
+      <div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+    </nav>
+  </div>
+</div>
+
+<!-- DETAIL PSG -->
+<div class="screen" id="s-dp">
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="dh" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)">
+      <div class="bk" style="position:absolute;top:56px;left:20px" onclick="go('s-li')">←</div>
+      <div class="dpb">📷 3</div>
+      <div class="dfb liked" id="fav-dp" onclick="toggleFav('fav-dp')">♥</div>
+      <div style="font-size:72px">⚽</div>
+      <div class="dib" style="background:rgba(59,130,246,.3)">⚽</div>
+    </div>
+    <div class="sa"><div style="padding:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase">FOOTBALL · LIGUE 1</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--text);margin:6px 0 4px;line-height:1.1">PSG vs Olympique de Marseille</div>
+      <div style="font-size:14px;color:var(--pl)">📍 Parc des Princes</div>
+      <div class="dg">
+        <div class="dib2"><div class="dil">📅 Date</div><div class="div2">Ce soir - 21h00</div></div>
+        <div class="dib2"><div class="dil">📍 Distance</div><div class="div2">1.2 Km</div></div>
+        <div class="dib2"><div class="dil">Prix / Place</div><div class="div2 g">45€</div></div>
+        <div class="dib2"><div class="dil">Place Dispo</div><div class="div2" style="color:var(--text)">32 Places</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px">Le classique du football français. PSG reçoit l'OM au Parc des Princes pour un match qui s'annonce électrique.</p>
+      <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">🔗 Site Officiel & Billeterie externe <span>→</span></div>
+      <div class="ob"><div class="obt">🎟️ Commander mes places</div><div class="qr"><div style="font-size:14px;color:var(--text)">Nombre de places</div><div class="qc"><div class="qb" onclick="qty('qn-dp',-1)">−</div><div class="qn" id="qn-dp">1</div><div class="qb" onclick="qty('qn-dp',1)">+</div></div></div><div style="font-size:12px;color:var(--text3);margin-top:8px">Prix unitaire <span style="color:var(--green);font-weight:700">45€</span></div></div>
+    </div></div>
+    <div class="sb"><button class="btn bp" onclick="go('s-conf')">Réserver ma place →</button></div>
+    <nav class="nb">
+      <div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+      <div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div>
+      <div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+      <div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div>
+      <div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+    </nav>
+  </div>
+</div>
+
+<!-- DETAIL KYAN -->
+<div class="screen" id="s-dk">
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="dh" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">
+      <div class="bk" style="position:absolute;top:56px;left:20px" onclick="go('s-li')">←</div>
+      <div class="dpb">📷 3</div>
+      <div class="dfb liked" id="fav-dk" onclick="toggleFav('fav-dk')">♥</div>
+      <div style="font-size:72px">🎤</div>
+      <div class="dib" style="background:rgba(220,38,38,.3)">🎤</div>
+    </div>
+    <div class="sa"><div style="padding:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase">STAND-UP</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--text);margin:6px 0 4px">Kyan Khojandi</div>
+      <div style="font-size:14px;color:var(--pl)">📍 Bercy</div>
+      <div class="dg">
+        <div class="dib2"><div class="dil">📅 Date</div><div class="div2">Ce soir - 21h00</div></div>
+        <div class="dib2"><div class="dil">📍 Distance</div><div class="div2">1.2 Km</div></div>
+        <div class="dib2"><div class="dil">Prix / Place</div><div class="div2 g">20€</div></div>
+        <div class="dib2"><div class="dil">Place Dispo</div><div class="div2" style="color:var(--text)">32 Places</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px">Le show incontournable de Kyan Khojandi à Paris. Humour, authenticité et énergie — une soirée inoubliable garantie.</p>
+      <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">🔗 Site Officiel & Billeterie externe <span>→</span></div>
+      <div class="ob"><div class="obt">🎟️ Commander mes places</div><div class="qr"><div style="font-size:14px;color:var(--text)">Nombre de places</div><div class="qc"><div class="qb" onclick="qty('qn-dk',-1)">−</div><div class="qn" id="qn-dk">1</div><div class="qb" onclick="qty('qn-dk',1)">+</div></div></div><div style="font-size:12px;color:var(--text3);margin-top:8px">Prix unitaire <span style="color:var(--green);font-weight:700">20€</span></div></div>
+    </div></div>
+    <div class="sb"><button class="btn bp" onclick="go('s-conf')">Réserver ma place →</button></div>
+    <nav class="nb"><div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div><div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div><div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div><div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div><div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+  </div>
+</div>
+
+<!-- DETAIL STANDART -->
+<div class="screen" id="s-ds">
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="dh" style="background:linear-gradient(135deg,#78350f,#d97706)">
+      <div class="bk" style="position:absolute;top:56px;left:20px" onclick="go('s-li')">←</div>
+      <div class="dpb">📷 3</div>
+      <div class="dfb" id="fav-ds" onclick="toggleFav('fav-ds')">♡</div>
+      <div style="font-size:72px">🍺</div>
+      <div class="dib" style="background:rgba(217,119,6,.3)">🍺</div>
+    </div>
+    <div class="sa"><div style="padding:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase">BAR & SOIRÉE</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--text);margin:6px 0 4px">Stand'art Café</div>
+      <div style="font-size:14px;color:var(--pl)">📍 Ménilmontant</div>
+      <div class="dg">
+        <div class="dib2"><div class="dil">📅 Date</div><div class="div2">Ce soir - 21h00</div></div>
+        <div class="dib2"><div class="dil">📍 Distance</div><div class="div2">0.8 Km</div></div>
+        <div class="dib2"><div class="dil">Prix / Place</div><div class="div2 g">0€</div></div>
+        <div class="dib2"><div class="dil">Place Dispo</div><div class="div2" style="color:var(--text)">Illimités</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px">Bar de quartier à Ménilmontant — ambiance chaleureuse, bières artisanales et musique live. Entrée libre toute la nuit !</p>
+      <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">🔗 Site Officiel & Billeterie externe <span>→</span></div>
+      <div class="ob"><div class="obt">🎟️ Commander mes places</div><div class="qr"><div style="font-size:14px;color:var(--text)">Nombre de places</div><div class="qc"><div class="qb" onclick="qty('qn-ds',-1)">−</div><div class="qn" id="qn-ds">1</div><div class="qb" onclick="qty('qn-ds',1)">+</div></div></div><div style="font-size:12px;color:var(--text3);margin-top:8px">Prix unitaire <span style="color:var(--green);font-weight:700">0€</span></div></div>
+    </div></div>
+    <div class="sb"><button class="btn bp" onclick="go('s-conf')">Réserver ma place →</button></div>
+    <nav class="nb"><div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div><div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div><div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div><div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div><div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+  </div>
+</div>
+
+<!-- DETAIL VICTOR -->
+<div class="screen" id="s-dv">
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="dh" style="background:linear-gradient(135deg,#134e4a,#0d9488)">
+      <div class="bk" style="position:absolute;top:56px;left:20px" onclick="go('s-li')">←</div>
+      <div class="dpb">📷 3</div>
+      <div class="dfb liked" id="fav-dv" onclick="toggleFav('fav-dv')">♥</div>
+      <div style="font-size:72px">🎨</div>
+      <div class="dib" style="background:rgba(13,148,136,.3)">🎨</div>
+    </div>
+    <div class="sa"><div style="padding:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase">EXPOSITION</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--text);margin:6px 0 4px">Victor Hugo - Décorateur</div>
+      <div style="font-size:14px;color:var(--pl)">📍 Bercy</div>
+      <div class="dg">
+        <div class="dib2"><div class="dil">📅 Date</div><div class="div2">Ce soir - 21h00</div></div>
+        <div class="dib2"><div class="dil">📍 Distance</div><div class="div2">1.2 Km</div></div>
+        <div class="dib2"><div class="dil">Prix / Place</div><div class="div2 g">55€</div></div>
+        <div class="dib2"><div class="dil">Place Dispo</div><div class="div2" style="color:var(--text)">32 Places</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px">Découvrez Victor Hugo sous un angle inédit — celui du décorateur, du dessinateur et de l'artiste visuel. Exposition immersive unique.</p>
+      <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">🔗 Site Officiel & Billeterie externe <span>→</span></div>
+      <div class="ob"><div class="obt">🎟️ Commander mes places</div><div class="qr"><div style="font-size:14px;color:var(--text)">Nombre de places</div><div class="qc"><div class="qb" onclick="qty('qn-dv',-1)">−</div><div class="qn" id="qn-dv">1</div><div class="qb" onclick="qty('qn-dv',1)">+</div></div></div><div style="font-size:12px;color:var(--text3);margin-top:8px">Prix unitaire <span style="color:var(--green);font-weight:700">55€</span></div></div>
+    </div></div>
+    <div class="sb"><button class="btn bp" onclick="go('s-conf')">Réserver ma place →</button></div>
+    <nav class="nb"><div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div><div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div><div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div><div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div><div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+  </div>
+</div>
+
+<!-- DETAIL SOLARY -->
+<div class="screen" id="s-dso">
+  <div style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+    <div class="dh" style="background:linear-gradient(135deg,#164e63,#06b6d4)">
+      <div class="bk" style="position:absolute;top:56px;left:20px" onclick="go('s-li')">←</div>
+      <div class="dpb">📷 3</div>
+      <div class="dfb liked" id="fav-dso" onclick="toggleFav('fav-dso')">♥</div>
+      <div style="font-size:72px">🎮</div>
+      <div class="dib" style="background:rgba(6,182,212,.3)">🎮</div>
+    </div>
+    <div class="sa"><div style="padding:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1.5px;text-transform:uppercase">ESPORT</div>
+      <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--text);margin:6px 0 4px">Solary vs Gentlemate</div>
+      <div style="font-size:14px;color:var(--pl)">📍 Bercy</div>
+      <div class="dg">
+        <div class="dib2"><div class="dil">📅 Date</div><div class="div2">Ce soir - 21h00</div></div>
+        <div class="dib2"><div class="dil">📍 Distance</div><div class="div2">1.2 Km</div></div>
+        <div class="dib2"><div class="dil">Prix / Place</div><div class="div2 g">55€</div></div>
+        <div class="dib2"><div class="dil">Place Dispo</div><div class="div2" style="color:var(--text)">32 Places</div></div>
+      </div>
+      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:16px">Le duel esport de la saison ! Solary affronte Gentlemate dans une arène électrisée. Ambiance de feu garantie pour les fans.</p>
+      <div style="background:var(--bg3);border-radius:14px;padding:14px 16px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;cursor:pointer;color:var(--text2);font-size:14px">🔗 Site Officiel & Billeterie externe <span>→</span></div>
+      <div class="ob"><div class="obt">🎟️ Commander mes places</div><div class="qr"><div style="font-size:14px;color:var(--text)">Nombre de places</div><div class="qc"><div class="qb" onclick="qty('qn-dso',-1)">−</div><div class="qn" id="qn-dso">1</div><div class="qb" onclick="qty('qn-dso',1)">+</div></div></div><div style="font-size:12px;color:var(--text3);margin-top:8px">Prix unitaire <span style="color:var(--green);font-weight:700">55€</span></div></div>
+    </div></div>
+    <div class="sb"><button class="btn bp" onclick="go('s-conf')">Réserver ma place →</button></div>
+    <nav class="nb"><div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div><div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div><div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div><div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div><div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+  </div>
+</div>
+
+<!-- CONFIRMATION -->
+<div class="screen" id="s-conf">
+  <div class="mo">
+    <div class="mc">
+      <div class="ci">✓</div>
+      <h2 style="font-size:24px;margin-bottom:8px">Réservation confirmée</h2>
+      <p style="color:var(--text3);font-size:14px">1 place(s) pour Monet & Lumière · Total : 22€</p>
+      <div class="cr">Rèf. HTG-HQG2NNCU</div>
+      <p style="color:var(--text3);font-size:13px;margin-bottom:24px">Un email de confirmation vous a été envoyé avec votre billet éléctronique</p>
+      <button class="btn bp" onclick="go('s-dd')">Retour à l'évènement</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div class="screen" id="s-se">
+  <div style="padding:56px 16px 12px;flex-shrink:0;display:flex;align-items:center;gap:10px">
+    <input class="inp" placeholder="Concert, sport, expo..." style="flex:1">
+    <span style="color:var(--text2);cursor:pointer;font-size:14px;white-space:nowrap" onclick="go('s-hu')">Annuler</span>
+  </div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 16px;flex-shrink:0"></div>
+  <div style="padding:14px 16px 8px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+    <span style="font-size:11px;font-weight:700;color:var(--text3);letter-spacing:1px">RÉSULTATS</span>
+    <button style="background:var(--purple);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer">Filtres</button>
+  </div>
+  <div class="sa" style="padding:0 16px 20px">
+    <div class="ec" onclick="go('s-dd')"><div class="ei" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">🎵</div><div class="search-card-info" style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(124,58,237,.2);color:var(--pl);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">CONCERT</span></div><div class="et">Daft Punk Tribute Night</div><div class="em">1.2 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--pl)">45€</span></div></div>
+    <div class="ec" onclick="go('s-dp')"><div class="ei" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)">⚽</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(59,130,246,.2);color:#93c5fd;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">SPORT</span></div><div class="et">PSG vs Olympique de Marseille</div><div class="em">3.2 km</div></div><div class="er"><span class="badge bg2" style="font-size:10px">DEMAIN</span><span style="font-size:15px;font-weight:700;color:var(--pl)">89€</span></div></div>
+    <div class="ec" onclick="go('s-dv')"><div class="ei" style="background:linear-gradient(135deg,#134e4a,#0d9488)">🎨</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(13,148,136,.2);color:#5eead4;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">EXPOSITION</span></div><div class="et">Victor Hugo - Décorateur</div><div class="em">1.2 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--pl)">45€</span></div></div>
+    <div class="ec" onclick="go('s-dk')"><div class="ei" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">🎤</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(220,38,38,.2);color:#fca5a5;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">STAND-UP</span></div><div class="et">Kyan Khojandi</div><div class="em">1.2 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--pl)">45€</span></div></div>
+    <div class="ec" onclick="go('s-dso')"><div class="ei" style="background:linear-gradient(135deg,#0e7490,#06b6d4)">🎮</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(6,182,212,.2);color:#67e8f9;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">ESPORT</span></div><div class="et">Solary vs Gentlemate</div><div class="em">1.2 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--pl)">45€</span></div></div>
+    <div class="ec" onclick="go('s-ds')"><div class="ei" style="background:linear-gradient(135deg,#78350f,#d97706)">🍺</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(217,119,6,.2);color:#fcd34d;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">BAR</span></div><div class="et">Stand'art Café</div><div class="em">0.8 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--green)">0€</span></div></div>
+  </div>
+</div>
+
+<!-- EXPLORER -->
+<div class="screen" id="s-ex">
+  <div class="tbar" style="justify-content:space-between"><div class="bk" onclick="go('s-hu')">←</div><div class="ttl">Explorer</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:16px 20px">
+    <div class="sec">CATÉGORIE</div>
+    <div class="egrid">
+      <div class="ct" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)" onclick="go('s-li')">🎵 Concerts</div>
+      <div class="ct" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)" onclick="go('s-li')">🎤 Stand-Up</div>
+      <div class="ct" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)" onclick="go('s-li')">⚽ Sport</div>
+      <div class="ct" style="background:linear-gradient(135deg,#134e4a,#059669)" onclick="go('s-li')">🎨 Expositions</div>
+      <div class="ct" style="background:linear-gradient(135deg,#78350f,#d97706)" onclick="go('s-li')">🍺 Bars</div>
+      <div class="ct" style="background:linear-gradient(135deg,#0e7490,#06b6d4)" onclick="go('s-li')">🎮 E-Sport</div>
+      <div class="ct" style="background:linear-gradient(135deg,#581c87,#a855f7)" onclick="go('s-li')">🎭 Théâtre</div>
+      <div class="ct" style="background:var(--bg3);border:1px solid var(--border)" onclick="go('s-li')">✦ Tout</div>
+    </div>
+    <div class="sec">PRIX</div>
+    <div class="fr" id="fr-prix" style="margin-bottom:16px">
+      <div class="fc act" onclick="fchip(this,'fr-prix')">Tous</div>
+      <div class="fc" onclick="fchip(this,'fr-prix')">🟢 Gratuit</div>
+      <div class="fc" onclick="fchip(this,'fr-prix')">Payant</div>
+    </div>
+    <div class="sec">QUAND</div>
+    <div class="fr" id="fr-quand" style="margin-bottom:20px">
+      <div class="fc act" onclick="fchip(this,'fr-quand')">Aujd</div>
+      <div class="fc" onclick="fchip(this,'fr-quand')">Demain</div>
+      <div class="fc" onclick="fchip(this,'fr-quand')">Week-end</div>
+      <div class="fc" onclick="fchip(this,'fr-quand')">Cette semaine</div>
+    </div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:14px">7 évènements trouvés</div>
+    <div class="ec" onclick="go('s-dp')"><div class="ei" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)">⚽</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(59,130,246,.2);color:#93c5fd;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">SPORT</span></div><div class="et">PSG vs Olympique de Marseille</div><div class="em">3.2 km</div></div><div class="er"><span class="badge bg2" style="font-size:10px">DEMAIN</span><span style="font-size:15px;font-weight:700;color:var(--pl)">89€</span></div></div>
+    <div class="ec" onclick="go('s-dv')"><div class="ei" style="background:linear-gradient(135deg,#134e4a,#0d9488)">🎨</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(13,148,136,.2);color:#5eead4;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">EXPOSITION</span></div><div class="et">Victor Hugo - Décorateur</div><div class="em">1.2 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--pl)">45€</span></div></div>
+    <div class="ec" onclick="go('s-dk')"><div class="ei" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">🎤</div><div style="flex:1;min-width:0"><div style="display:flex;gap:6px;margin-bottom:4px"><span style="background:rgba(220,38,38,.2);color:#fca5a5;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">STAND-UP</span></div><div class="et">Kyan Khojandi</div><div class="em">1.2 km</div></div><div class="er"><span class="badge br" style="font-size:10px">CE SOIR</span><span style="font-size:15px;font-weight:700;color:var(--pl)">20€</span></div></div>
+  </div>
+  <nav class="nb">
+    <div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+    <div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span class="nl">Listes</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+    <div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div>
+    <div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- FAVORIS -->
+<div class="screen" id="s-fa">
+  <div class="tbar"><div class="bk" onclick="go('s-hu')">←</div><div class="ttl">Mes favoris</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px">
+    <div style="font-size:72px;filter:drop-shadow(0 0 20px rgba(139,0,0,.5))">❤️</div>
+    <div style="font-size:15px;color:var(--text2);text-align:center">Aucun favori pour l'instant<br>Sauvegarde des events depuis la carte !</div>
+    <button class="btn bo" style="width:auto;padding:14px 32px;margin-top:8px" onclick="go('s-hu')">Voir la carte →</button>
+  </div>
+  <nav class="nb">
+    <div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+    <div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span class="nl">Listes</span></div>
+    <div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" fill="currentColor"/></svg><span class="nl">Favoris</span></div>
+    <div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- PROFIL USER -->
+<div class="screen" id="s-pu">
+  <div class="sa">
+    <div class="ph">
+      <div class="pr">
+        <div class="pa"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div class="pad"></div></div>
+        <div style="flex:1"><div class="pn">Thomas Martin</div><div class="pe">thomas.martin@gmail.com</div></div>
+        <button style="background:var(--purple);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">✏️ Modifier</button>
+      </div>
+      <div class="pt">👤 Utilisateur · Paris 20e</div>
+      <div class="ps">
+        <div class="stb" style="background:#5b21b6"><div class="stn">12</div><div class="stl">Réservations</div></div>
+        <div class="stb" style="background:#7f1d1d"><div class="stn">8</div><div class="stl">Favoris</div></div>
+        <div class="stb" style="background:#065f46"><div class="stn">6</div><div class="stl">Avis</div></div>
+      </div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <div class="sec">MON COMPTE</div>
+      <div class="mi"><div class="mil">🎟️ Mes réservations</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:700;color:var(--pl)">45</span><span style="color:var(--text3)">›</span></div></div>
+      <div class="mi"><div class="mil">❤️ Mes favoris</div><span style="color:var(--text3)">›</span></div>
+      <div class="mi" onclick="go('s-nu')"><div class="mil">🔔 Notifications</div><div style="display:flex;align-items:center;gap:8px"><span class="nbd">3</span><span style="color:var(--text3)">›</span></div></div>
+      <div class="sec">PRÉFÉRENCES</div>
+      <div class="mi" style="flex-direction:column;align-items:flex-start">
+        <div class="mil" style="margin-bottom:10px">🎨 Thème de l'app</div>
+        <div style="display:flex;gap:8px;padding:6px;background:var(--bg);border-radius:12px;width:100%">
+          <div style="flex:1;padding:10px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text3)">☀️ Clair</div>
+          <div style="flex:1;padding:10px;border-radius:8px;background:var(--bg3);color:var(--pl);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:13px">🌙 Sombre</div>
+        </div>
+      </div>
+      <div class="mi" onclick="go('s-au')"><div class="mil">⭐ À propos</div><span style="color:var(--text3)">›</span></div>
+      <button class="btn bd" style="margin-top:16px" onclick="go('s-cx')">Se Déconnecter</button>
+    </div>
+  </div>
+  <nav class="nb">
+    <div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div>
+    <div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span class="nl">Listes</span></div>
+    <div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div>
+    <div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- PROFIL ORGA -->
+<div class="screen" id="s-po">
+  <div class="sa">
+    <div class="ph">
+      <div class="pr">
+        <div class="pa"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><div class="pad"></div></div>
+        <div style="flex:1"><div class="pn">Mathias Hugo</div><div class="pe">mathias.hugo@gmail.com</div></div>
+        <button style="background:var(--purple);color:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">✏️ Modifier</button>
+      </div>
+      <div class="pt">🏢 Organisateur · Paris 20e</div>
+      <div class="ps">
+        <div class="stb" style="background:#5b21b6"><div class="stn">12</div><div class="stl">Réservations</div></div>
+        <div class="stb" style="background:#7f1d1d"><div class="stn">8</div><div class="stl">Évènements</div></div>
+        <div class="stb" style="background:#065f46"><div class="stn">6</div><div class="stl">Avis</div></div>
+      </div>
+    </div>
+    <div style="padding:0 20px 20px">
+      <div class="sec">MON COMPTE</div>
+      <div class="mi"><div class="mil">🎟️ Mes réservations</div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:700;color:var(--pl)">45</span><span style="color:var(--text3)">›</span></div></div>
+      <div class="mi" onclick="go('s-me')"><div class="mil">📅 Mes Évènements</div><span style="color:var(--text3)">›</span></div>
+      <div class="mi" onclick="go('s-no')"><div class="mil">🔔 Notifications</div><div style="display:flex;align-items:center;gap:8px"><span class="nbd">3</span><span style="color:var(--text3)">›</span></div></div>
+      <div class="sec">PRÉFÉRENCES</div>
+      <div class="mi" style="flex-direction:column;align-items:flex-start">
+        <div class="mil" style="margin-bottom:10px">🎨 Thème de l'app</div>
+        <div style="display:flex;gap:8px;padding:6px;background:var(--bg);border-radius:12px;width:100%">
+          <div style="flex:1;padding:10px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:13px;color:var(--text3)">☀️ Clair</div>
+          <div style="flex:1;padding:10px;border-radius:8px;background:var(--bg3);color:var(--pl);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:13px">🌙 Sombre</div>
+        </div>
+      </div>
+      <div class="mi" onclick="go('s-ao')"><div class="mil">⭐ À propos</div><span style="color:var(--text3)">›</span></div>
+      <button class="btn bd" style="margin-top:16px" onclick="go('s-cx')">Se Déconnecter</button>
+    </div>
+  </div>
+  <nav class="nb">
+    <div class="ni" onclick="go('s-pub')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div>
+    <div class="ni" onclick="go('s-me')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div>
+    <div class="ni" onclick="go('s-pl')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nl">Plans</span></div>
+    <div class="ni" onclick="go('s-ao')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div>
+    <div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div>
+  </nav>
+</div>
+
+<!-- NOTIFS USER -->
+<div class="screen" id="s-nu">
+  <div class="tbar" style="justify-content:space-between"><div class="bk" onclick="go('s-pu')">←</div><div class="ttl">Notifications</div><span style="color:var(--pl);font-size:14px;cursor:pointer">Tout lire</span></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:16px 20px">
+    <div class="sec">AUJOURD'HUI · 3 NON LUES</div>
+    <div class="nc un"><div class="ndi"></div><div class="ni2" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">🎵</div><div style="flex:1;min-width:0"><div class="nt">Rappel — Ce soir !</div><div class="ns">Daft Punk Tribute Night · L'Olympia</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 1h</span><span style="background:rgba(124,58,237,.2);color:var(--pl);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">Concert</span></div></div></div>
+    <div class="nc un"><div class="ndi"></div><div class="ni2" style="background:var(--green);font-size:24px">✓</div><div style="flex:1;min-width:0"><div class="nt">Réservation confirmée</div><div class="ns">PSG vs OM · Réf. HTG-D8E4C2</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 5h</span><span class="badge bg2" style="font-size:10px">Réservation</span></div></div></div>
+    <div class="nc un"><div class="ndi"></div><div class="ni2" style="background:linear-gradient(135deg,#92400e,#d97706)">🔥</div><div style="flex:1;min-width:0"><div class="nt">Nouvel event près de toi</div><div class="ns">Bars Stand'art Café · Ménilmontant</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 3h</span><span style="background:rgba(124,58,237,.2);color:var(--pl);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">Près de toi</span></div></div></div>
+    <div class="sec" style="margin-top:16px">HIER</div>
+    <div class="nc"><div class="ni2" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">⚡</div><div style="flex:1;min-width:0"><div class="nt">Plus que 5 places !</div><div class="ns">Carmen — Bizet · Opéra Garnier</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Hier</span><span class="badge br" style="font-size:10px">Alerte</span></div></div></div>
+    <div class="nc"><div class="ni2" style="background:linear-gradient(135deg,#713f12,#ca8a04)">⭐</div><div style="flex:1;min-width:0"><div class="nt">Donnez votre avis</div><div class="ns">Monet & Lumière — votre expérience ?</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Hier</span><span style="background:rgba(234,179,8,.2);color:#fde047;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">Avis</span></div></div></div>
+    <div class="nc"><div class="ni2" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">🎵</div><div style="flex:1;min-width:0"><div class="nt">Concert près de toi</div><div class="ns">Networking tech · Paris 9e · Ce soir</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 2 jours</span></div></div></div>
+  </div>
+  <nav class="nb"><div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div><div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div><div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div><div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div><div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+<!-- NOTIFS ORGA -->
+<div class="screen" id="s-no">
+  <div class="tbar" style="justify-content:space-between"><div class="bk" onclick="go('s-po')">←</div><div class="ttl">Notifications</div><span style="color:var(--pl);font-size:14px;cursor:pointer">Tout lire</span></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:16px 20px">
+    <div class="sec">AUJOURD'HUI · 3 NON LUES</div>
+    <div class="nc un"><div class="ndi"></div><div class="ni2" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">🎵</div><div style="flex:1;min-width:0"><div class="nt">Rappel — Ce soir !</div><div class="ns">Daft Punk Tribute Night · L'Olympia</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 1h</span><span style="background:rgba(124,58,237,.2);color:var(--pl);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">Concert</span></div></div></div>
+    <div class="nc un"><div class="ndi"></div><div class="ni2" style="background:var(--green);font-size:24px">✓</div><div style="flex:1;min-width:0"><div class="nt">Réservation confirmée</div><div class="ns">PSG vs OM · Réf. HTG-D8E4C2</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 5h</span><span class="badge bg2" style="font-size:10px">Réservation</span></div></div></div>
+    <div class="nc un"><div class="ndi"></div><div class="ni2" style="background:linear-gradient(135deg,#92400e,#d97706)">🔥</div><div style="flex:1;min-width:0"><div class="nt">Nouvel event près de toi</div><div class="ns">Bars Stand'art Café · Ménilmontant</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Il y a 3h</span></div></div></div>
+    <div class="sec" style="margin-top:16px">HIER</div>
+    <div class="nc"><div class="ni2" style="background:linear-gradient(135deg,#7f1d1d,#dc2626)">⚡</div><div style="flex:1;min-width:0"><div class="nt">Plus que 5 places !</div><div class="ns">Carmen — Bizet · Opéra Garnier</div><div class="nm"><span style="font-size:11px;color:var(--text3)">Hier</span><span class="badge br" style="font-size:10px">Alerte</span></div></div></div>
+  </div>
+  <nav class="nb"><div class="ni" onclick="go('s-pub')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div><div class="ni" onclick="go('s-me')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div><div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nl">Plans</span></div><div class="ni" onclick="go('s-ao')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div><div class="ni" onclick="go('s-po')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+<!-- PUBLIER EVENT -->
+<div class="screen" id="s-pub">
+  <div class="tbar"><div class="bk" onclick="go('s-ho')">←</div><div class="ttl">Publier un évènement</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:16px 20px">
+    <div class="pub-g"><div class="pub-l">Titre de l'évènement *</div><input class="inp" placeholder="Ex: Soirée Jazz au Sunset Club"></div>
+    <div class="pub-g"><div style="display:flex;gap:10px"><div style="flex:1"><div class="pub-l">Date *</div><input class="inp" placeholder="jj/mm/aaaa"></div><div style="flex:1"><div class="pub-l">Heure *</div><input class="inp" placeholder="--:--"></div></div></div>
+    <div class="pub-g"><div class="pub-l">Lieu *</div><input class="inp" placeholder="Adresse ou nom du lieu"></div>
+    <div class="pub-g">
+      <div class="pub-l">Catégorie *</div>
+      <div id="cats" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+        <div class="chip act" onclick="chipSel(this,'cats')">✦ Tout</div>
+        <div class="chip" onclick="chipSel(this,'cats')">🎵 Concerts</div>
+        <div class="chip" onclick="chipSel(this,'cats')">⚽ Sport</div>
+        <div class="chip" onclick="chipSel(this,'cats')">🎨 Expos</div>
+        <div class="chip" onclick="chipSel(this,'cats')">🍺 Bars</div>
+        <div class="chip" onclick="chipSel(this,'cats')">🎭 Théâtre</div>
+        <div class="chip" onclick="chipSel(this,'cats')">🎮 E-Sport</div>
+        <div class="chip" onclick="chipSel(this,'cats')">🎤 Stand-Up</div>
+      </div>
+    </div>
+    <div class="pub-g"><div class="pub-l">Description</div><textarea class="inp" rows="4" placeholder="Décris l'évènement en quelques lignes..." style="resize:none;line-height:1.5"></textarea></div>
+    <div class="pub-g"><div class="pub-l">Lien billeterie / Site *</div><input class="inp" placeholder="http://..."></div>
+    <div class="pub-g">
+      <div class="pub-l">Photos de l'évènement</div>
+      <div class="pu2"><div style="font-size:32px">📷</div><div style="font-size:14px;font-weight:600">Clique pour ajouter des photos</div><div style="font-size:12px;color:var(--text3)">JPG, PNG · Max 3 photos · 10 Mo chacune</div></div>
+    </div>
+    <button class="btn bp" style="margin-bottom:24px" onclick="go('s-me')">Publier l'évènement →</button>
+  </div>
+  <nav class="nb"><div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div><div class="ni" onclick="go('s-me')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div><div class="ni" onclick="go('s-pl')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nl">Plans</span></div><div class="ni" onclick="go('s-ao')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div><div class="ni" onclick="go('s-po')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+<!-- MES EVENTS ORGA -->
+<div class="screen" id="s-me">
+  <div class="tbar"><div class="bk" onclick="go('s-ho')">←</div><div class="ttl">Mes évènements</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:16px 20px">
+    <div style="display:flex;gap:10px;margin-bottom:20px">
+      <div class="stb" style="background:rgba(16,185,129,.15);border:1px solid var(--green)"><div class="stn" style="color:var(--green);font-size:22px">3</div><div class="stl" style="color:var(--green)">En cours</div></div>
+      <div class="stb" style="background:rgba(239,68,68,.15);border:1px solid var(--red)"><div class="stn" style="color:var(--red);font-size:22px">1</div><div class="stl" style="color:var(--red)">Brouillon</div></div>
+      <div class="stb" style="background:rgba(168,85,247,.15);border:1px solid var(--pl)"><div class="stn" style="color:var(--pl);font-size:22px">142</div><div class="stl" style="color:var(--pl)">Vues</div></div>
+      <div class="stb" style="background:rgba(249,115,22,.15);border:1px solid var(--orange)"><div class="stn" style="color:var(--orange);font-size:22px">133</div><div class="stl" style="color:var(--orange)">Résa</div></div>
+    </div>
+    <div class="sec">MES EVENTS · 4 TOTAL</div>
+    <div class="oec lv" onclick="go('s-dd')"><div class="oei" style="background:linear-gradient(135deg,#5b21b6,#7c3aed)">🎵</div><div class="oei" style="background:none;width:auto;height:auto;flex:1;min-width:0;font-size:14px"><div class="oet">Daft Punk Tribute Night</div><div class="oem">Ce soir · 21h · L'Olympia</div><div class="oes">👁 <span>68 vues</span> · 🎟 <span>32 résa</span> · Conv. <span>47%</span></div></div><div class="lb"><div class="lbd"></div>Live</div></div>
+    <div class="oec lv" onclick="go('s-dp')"><div class="oei" style="background:linear-gradient(135deg,#1e3a8a,#3b82f6)">⚽</div><div style="flex:1;min-width:0"><div class="oet">PSG vs Olympique de Marseille</div><div class="oem">Demain · 21h · Parc des Princes</div><div class="oes">👁 <span>214 vues</span> · 🎟 <span>89 résa</span> · Conv. <span>42%</span></div></div><div class="lb"><div class="lbd"></div>Live</div></div>
+    <div class="oec lv" onclick="go('s-dv')"><div class="oei" style="background:linear-gradient(135deg,#581c87,#a855f7)">🎭</div><div style="flex:1;min-width:0"><div class="oet">Victor Hugo - Les Misérables</div><div class="oem">Ce soir · 21h · Bercy</div><div class="oes">👁 <span>45 vues</span> · 🎟 <span>12 résa</span> · Conv. <span>27%</span></div></div><div class="lb"><div class="lbd"></div>Live</div></div>
+    <div class="oec dr"><div class="oei" style="background:var(--bg);border:1px solid var(--border)">🎵</div><div style="flex:1;min-width:0"><div class="oet">Daft Punk Tribute Night</div><div class="oem">Pas encore publié</div><div class="oes">— vues · — réservations</div><div style="color:var(--orange);font-size:12px;font-weight:600;margin-top:4px;cursor:pointer" onclick="go('s-pub')">Finaliser et publier →</div></div><div style="background:rgba(249,115,22,.15);color:var(--orange);border:1px solid var(--orange);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;white-space:nowrap">Brouillon</div></div>
+  </div>
+  <nav class="nb"><div class="ni" onclick="go('s-pub')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div><div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div><div class="ni" onclick="go('s-pl')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nl">Plans</span></div><div class="ni" onclick="go('s-ao')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div><div class="ni" onclick="go('s-po')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+<!-- PLANS -->
+<div class="screen" id="s-pl">
+  <div class="tbar"><div class="bk" onclick="go('s-ho')">←</div><div class="ttl">Choisir un plan</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:16px 20px">
+    <div class="pc"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><span style="font-size:32px">🌱</span><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--text)">Gratuit</div><div class="pp">0€ <span>/ mois</span></div></div></div><div class="pf"><span class="pck">✓</span> 1 Évènement publié</div><div class="pf"><span class="pck">✓</span> Visible sur la carte & liste</div><div class="pf"><span class="pck">✓</span> Statistiques basiques (vues)</div><div class="pf"><span class="pck">✓</span> Pas de mise en avant</div><button class="btn bs" style="margin-top:14px">Plan Actuel</button></div>
+    <div class="pc ft"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><span style="font-size:32px">🚀</span><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--text)">Boost</div><div class="pp">14,90€ <span>/ mois</span></div></div></div><div class="pf"><span class="pck">✓</span> Jusqu'à 5 évènements actifs</div><div class="pf"><span class="pck">✓</span> Badge "Boosté" sur la carte</div><div class="pf"><span class="pck">✓</span> Statistiques avancées (clics, résa)</div><div class="pf"><span class="pck">✓</span> Apparition en top des résultats</div><div class="pf"><span class="pck">✓</span> Photo de couverture</div><button class="btn bp" style="margin-top:14px">Passer à Boost</button></div>
+    <div class="pc" style="margin-bottom:24px"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><span style="font-size:32px">👑</span><div><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:20px;color:var(--text)">Pro</div><div class="pp">39€ <span>/ mois</span></div></div></div><div class="pf"><span class="pck">✓</span> Évènements illimités</div><div class="pf"><span class="pck">✓</span> Mise en avant homepage</div><div class="pf"><span class="pck">✓</span> Notifications push aux utilisateurs</div><div class="pf"><span class="pck">✓</span> Dashboard analytiques complet</div><div class="pf"><span class="pck">✓</span> Intégration billeterie externe</div><div class="pf"><span class="pck">✓</span> Support prioritaire</div><button class="btn bp" style="margin-top:14px;background:linear-gradient(135deg,#713f12,#ca8a04)">Passer à Pro</button></div>
+  </div>
+  <nav class="nb"><div class="ni" onclick="go('s-pub')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div><div class="ni" onclick="go('s-me')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div><div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor"/></svg><span class="nl">Plans</span></div><div class="ni" onclick="go('s-ao')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div><div class="ni" onclick="go('s-po')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+<!-- ABOUT ORGA -->
+<div class="screen" id="s-ao">
+  <div class="tbar"><div class="bk" onclick="go('s-ho')">←</div><div class="ttl">À propos</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:0 20px">
+    <div class="alo">HypeToGo</div>
+    <div style="text-align:center;font-size:14px;color:var(--text3);margin-bottom:24px">Version 1.0.0</div>
+    <div class="sec">INFORMATION LÉGALES</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px">
+      <div class="sp" style="padding:0 16px"><div class="spl">🔒 Politique de confidalité</div><span style="color:var(--text3)">›</span></div>
+      <div class="sp" style="padding:0 16px"><div class="spl">📄 Condition d'utilisation</div><span style="color:var(--text3)">›</span></div>
+      <div class="sp" style="padding:0 16px;border-bottom:none"><div class="spl">🍪 Gestion des cookies</div><span style="color:var(--text3)">›</span></div>
+    </div>
+    <div class="sec">CONTACT & SUPPORT</div>
+    <div class="mi"><div class="mil">✉️ Nous contacter</div><span style="color:var(--text3)">›</span></div>
+    <div class="mi"><div class="mil">🐛 Signaler un bug</div><span style="color:var(--text3)">›</span></div>
+  </div>
+  <nav class="nb"><div class="ni" onclick="go('s-pub')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span class="nl">Publier</span></div><div class="ni" onclick="go('s-me')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="nl">Events</span></div><div class="ni" onclick="go('s-pl')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg><span class="nl">Plans</span></div><div class="ni act"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span class="nl">Infos</span></div><div class="ni" onclick="go('s-po')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+<!-- ABOUT USER -->
+<div class="screen" id="s-au">
+  <div class="tbar"><div class="bk" onclick="go('s-pu')">←</div><div class="ttl">À propos</div><div style="width:40px"></div></div>
+  <div style="height:2px;background:linear-gradient(90deg,var(--purple),transparent);margin:0 20px;flex-shrink:0"></div>
+  <div class="sa" style="padding:0 20px">
+    <div class="alo">HypeToGo</div>
+    <div style="text-align:center;font-size:14px;color:var(--text3);margin-bottom:24px">Version 1.0.0</div>
+    <div class="sec">INFORMATION LÉGALES</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px">
+      <div class="sp" style="padding:0 16px"><div class="spl">🔒 Politique de confidalité</div><span style="color:var(--text3)">›</span></div>
+      <div class="sp" style="padding:0 16px"><div class="spl">📄 Condition d'utilisation</div><span style="color:var(--text3)">›</span></div>
+      <div class="sp" style="padding:0 16px;border-bottom:none"><div class="spl">🍪 Gestion des cookies</div><span style="color:var(--text3)">›</span></div>
+    </div>
+    <div class="sec">CONTACT & SUPPORT</div>
+    <div class="mi"><div class="mil">✉️ Nous contacter</div><span style="color:var(--text3)">›</span></div>
+    <div class="mi"><div class="mil">🐛 Signaler un bug</div><span style="color:var(--text3)">›</span></div>
+  </div>
+  <nav class="nb"><div class="ni" onclick="go('s-hu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="nl">Carte</span></div><div class="ni" onclick="go('s-li')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg><span class="nl">Listes</span></div><div class="ni" onclick="go('s-ex')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span class="nl">Explorer</span></div><div class="ni" onclick="go('s-fa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><span class="nl">Favoris</span></div><div class="ni" onclick="go('s-pu')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span class="nl">Profil</span></div></nav>
+</div>
+
+</div><!-- /app -->
+
+<script>
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const t=document.getElementById(id);
+  if(t)t.classList.add('active');
+  const dd=document.getElementById('sort-dd');
+  if(dd)dd.style.display='none';
+}
+function chipSel(el,grp){
+  document.querySelectorAll('#'+grp+' .chip').forEach(c=>c.classList.remove('act'));
+  el.classList.add('act');
+}
+function fchip(el,grp){
+  document.querySelectorAll('#'+grp+' .fc').forEach(c=>c.classList.remove('act'));
+  el.classList.add('act');
+}
+function toggleDD(){
+  const dd=document.getElementById('sort-dd');
+  dd.style.display=dd.style.display==='none'?'block':'none';
+}
+function setSort(name){
+  document.getElementById('sort-label').textContent=name;
+  document.getElementById('sort-dd').style.display='none';
+}
+document.addEventListener('click',function(e){
+  const dd=document.getElementById('sort-dd');
+  if(dd&&!e.target.closest('.pl2'))dd.style.display='none';
+});
+function qty(id,delta){
+  const el=document.getElementById(id);
+  if(!el)return;
+  let v=parseInt(el.textContent)+delta;
+  if(v<1)v=1;if(v>20)v=20;
+  el.textContent=v;
+}
+function toggleFav(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  if(el.classList.contains('liked')){el.classList.remove('liked');el.textContent='♡';}
+  else{el.classList.add('liked');el.textContent='♥';}
+}
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    const l=document.getElementById('loading');
+    l.style.opacity='0';
+    setTimeout(()=>l.style.display='none',400);
+  },1200);
+});
+</script>
+</body>
+</html>
