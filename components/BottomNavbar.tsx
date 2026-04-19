@@ -4,11 +4,11 @@ import { router, usePathname } from 'expo-router'
 import { Colors } from '../constants/theme'
 
 const NAV_ITEMS = [
-  { label: 'Carte',    route: '/(user)/',        icon: '⌂' },
-  { label: 'Listes',   route: '/(user)/liste',   icon: '☰' },
-  { label: 'Explorer', route: '/(user)/explorer',icon: '⊙' },
-  { label: 'Favoris',  route: '/(user)/favoris', icon: '♡' },
-  { label: 'Profil',   route: '/(user)/profil',  icon: '○' },
+  { label: 'Carte',    route: '/(user)/',         icon: '⌂' },
+  { label: 'Listes',   route: '/(user)/liste',    icon: '≡' },
+  { label: 'Explorer', route: '/(user)/explorer', icon: '○' },
+  { label: 'Favoris',  route: '/(user)/favoris',  icon: '♡' },
+  { label: 'Profil',   route: '/(user)/profil',   icon: '○' },
 ]
 
 interface BottomNavbarProps {
@@ -46,13 +46,12 @@ function NavIcon({ name, active }: { name: string; active: boolean }) {
   const color = active ? Colors.purpleLight : Colors.text3
   const size = 22
 
-  // SVG-like icons via Text (React Native compatible)
   const icons: Record<string, string> = {
     Carte:    '⌂',
     Listes:   '≡',
-    Explorer: '⊙',
+    Explorer: '○',
     Favoris:  '♡',
-    Profil:   '◯',
+    Profil:   '○',
   }
 
   return (
@@ -66,7 +65,7 @@ const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
     height: 72,
-    backgroundColor: 'rgba(18,15,32,0.97)',
+    backgroundColor: `rgba(18,15,32,0.97)`,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
     borderTopLeftRadius: 28,
