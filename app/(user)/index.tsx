@@ -43,15 +43,20 @@ export default function HomeScreen() {
   })
 
   const handlePinPress = useCallback((event: Event) => {
+    if (selectedEventId === event.id) {
+      // Déjà sélectionné → navigue vers le détail
+      router.push(`/event/${event.id}`)
+      return
+    }
+    // Première fois → sélectionne et centre
     setSelectedEventId(event.id)
-    // Centre la carte sur le pin sélectionné
     mapRef.current?.animateToRegion({
       latitude: event.lat - 0.008,
       longitude: event.lng,
       latitudeDelta: 0.04,
       longitudeDelta: 0.03,
     }, 350)
-  }, [])
+  }, [selectedEventId])
 
   const handleCategoryChange = useCallback((cat: Category | null) => {
     setCategory(cat)
@@ -85,18 +90,24 @@ export default function HomeScreen() {
         </View>
 
         {/* Barre de recherche */}
-        <TouchableOpacity
-          style={styles.searchBar}
-          onPress={() => router.push('/(user)/search')}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.searchPlaceholder}>
-            Rechercher un évènement...
-          </Text>
-          <View style={styles.filtresBtn}>
-            <Text style={styles.filtresTxt}>Filtres</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.searchBar}>
+  <TouchableOpacity
+    style={{ flex: 1, height: '100%', justifyContent: 'center' }}
+    onPress={() => router.push('/(user)/search')}
+    activeOpacity={0.85}
+  >
+    <Text style={styles.searchPlaceholder}>
+      Rechercher un évènement...
+    </Text>
+  </TouchableOpacity>
+  <TouchableOpacity
+    style={styles.filtresBtn}
+    onPress={() => router.push('/(user)/explorer')}
+    activeOpacity={0.85}
+  >
+    <Text style={styles.filtresTxt}>Filtres</Text>
+  </TouchableOpacity>
+</View>
 
         {/* Chips catégories */}
         <CategoryChips
@@ -118,7 +129,7 @@ export default function HomeScreen() {
           showsCompass={false}
           showsScale={false}
           rotateEnabled={false}
-          onPress={() => setSelectedEventId(null)}
+          onPress={() => {}}
         >
           {events.map((event) => (
             <MapPin
@@ -150,10 +161,13 @@ export default function HomeScreen() {
         {/* Bottom sheet avec les events */}
         {!isLoading && (
           <EventBottomSheet
-            events={events.slice(0, 8)}
-            selectedId={selectedEventId}
-            onCardPress={handlePinPress}
-          />
+          events={[
+            ...events.filter(e => e.id === selectedEventId),
+            ...events.filter(e => e.id !== selectedEventId),
+          ].slice(0, 8)}
+          selectedId={selectedEventId}
+          onCardPress={handlePinPress}
+        />
         )}
 
         {/* Aucun event */}
@@ -216,7 +230,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'center',    // ← ajoute ça
     backgroundColor: Colors.bg3,
     borderWidth: 1.5,
     borderColor: Colors.border,

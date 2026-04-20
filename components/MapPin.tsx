@@ -29,7 +29,7 @@ export function MapPin({ event, onPress, selected }: MapPinProps) {
           selected && styles.bubbleSelected,
         ]}>
           <Text style={styles.bubbleText}>
-            {config?.emoji} {formatPrice(event.price)}
+          {config?.emoji} {event.title.length > 15 ? event.title.substring(0, 15) + '…' : event.title}
           </Text>
         </View>
 
