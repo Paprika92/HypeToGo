@@ -4,21 +4,25 @@ import { router, usePathname } from 'expo-router'
 import { Colors } from '../constants/theme'
 
 const NAV_ITEMS = [
+  { label: 'Carte',   route: '/(orga)/',        icon: '⌂' },
   { label: 'Publier', route: '/(orga)/publier', icon: '+' },
-  { label: 'Events',  route: '/(orga)/events',  icon: '▦' },
   { label: 'Plans',   route: '/(orga)/plans',   icon: '◈' },
-  { label: 'Infos',   route: '/(orga)/infos',   icon: 'ⓘ' },
+  { label: 'Events',  route: '/(orga)/events',  icon: '▦' },
   { label: 'Profil',  route: '/(orga)/profil',  icon: '◯' },
 ]
 
 export function BottomNavbarOrga() {
   const pathname = usePathname()
 
+  const isActive = (item: typeof NAV_ITEMS[0]) => {
+    if (item.label === 'Carte') return pathname === '/(orga)/' || pathname === '/(orga)'
+    return pathname.includes(item.label.toLowerCase())
+  }
+
   return (
     <View style={s.bar}>
       {NAV_ITEMS.map((item) => {
-        const isActive = pathname.includes(item.label.toLowerCase()) ||
-          (item.label === 'Publier' && pathname === '/(orga)/')
+        const active = isActive(item)
         return (
           <TouchableOpacity
             key={item.label}
@@ -26,8 +30,8 @@ export function BottomNavbarOrga() {
             onPress={() => router.push(item.route as any)}
             activeOpacity={0.7}
           >
-            <Text style={[s.icon, isActive && s.iconActive]}>{item.icon}</Text>
-            <Text style={[s.label, isActive && s.labelActive]}>{item.label}</Text>
+            <Text style={[s.icon, active && s.iconActive]}>{item.icon}</Text>
+            <Text style={[s.label, active && s.labelActive]}>{item.label}</Text>
           </TouchableOpacity>
         )
       })}
@@ -46,27 +50,9 @@ const s = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingBottom: 8,
   },
-  item: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 3,
-    paddingTop: 8,
-  },
-  icon: {
-    fontSize: 22,
-    color: Colors.text3,
-    lineHeight: 24,
-  },
-  iconActive: {
-    color: Colors.purpleLight,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: Colors.text3,
-  },
-  labelActive: {
-    color: Colors.purpleLight,
-  },
+  item:        { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingTop: 8 },
+  icon:        { fontSize: 22, color: Colors.text3, lineHeight: 24 },
+  iconActive:  { color: Colors.purpleLight },
+  label:       { fontSize: 11, fontWeight: '500', color: Colors.text3 },
+  labelActive: { color: Colors.purpleLight },
 })

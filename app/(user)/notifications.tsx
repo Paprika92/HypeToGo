@@ -16,7 +16,7 @@ interface Notif {
   id: string
   title: string
   subtitle: string
-  time: string
+  time?: string
   type: NotifType
   read: boolean
   emoji: string
@@ -25,24 +25,21 @@ interface Notif {
 }
 
 // Couleurs par type de notif
-const TYPE_STYLE: Record<NotifType, { badge_bg: string; badge_text: string; card_bg: string; border: string }> = {
-  'Concert':       { badge_bg: '#3A2870', badge_text: '#C4A8FF', card_bg: '#1A1240', border: '#3A2870' },
-  'Réservation':   { badge_bg: '#0F3D2A', badge_text: '#52D68A', card_bg: '#0A2018', border: '#1A5C3A' },
-  'Près de toi':   { badge_bg: '#2A1A60', badge_text: '#A78BFF', card_bg: '#180D40', border: '#3A2870' },
-  'Alerte':        { badge_bg: '#5C1A1A', badge_text: '#FF6B6B', card_bg: '#2A0808', border: '#7A2020' },
-  'Avis':          { badge_bg: '#4A3800', badge_text: '#FFD166', card_bg: '#201800', border: '#6A5200' },
-  'Info':          { badge_bg: '#1A1A35', badge_text: '#8888BB', card_bg: '#111128', border: '#2A2A45' },
+const TYPE_STYLE: Record<string, { badge_bg: string; badge_text: string; card_bg: string; border: string }> = {
+  'event':       { badge_bg: '#3A2870', badge_text: '#C4A8FF', card_bg: '#1A1240', border: '#3A2870' },
+  'reservation': { badge_bg: '#0F3D2A', badge_text: '#52D68A', card_bg: '#0A2018', border: '#1A5C3A' },
+  'alert':       { badge_bg: '#5C1A1A', badge_text: '#FF6B6B', card_bg: '#2A0808', border: '#7A2020' },
+  'info':        { badge_bg: '#1A1A35', badge_text: '#8888BB', card_bg: '#111128', border: '#2A2A45' },
 }
+const TYPE_LABEL: Record<string, string> = {
+  'event':       'Concert',
+  'reservation': 'Réservation',
+  'alert':       'Alerte',
+  'info':        'Info',
+};
 
 // Données de fallback si pas encore de table Supabase
-const MOCK_NOTIFS: Notif[] = [
-  { id: '1', title: 'Rappel — Ce soir !',        subtitle: "Daft Punk Tribute Night · L'Olympia",    time: 'Il y a 1h',     type: 'Concert',      read: false, emoji: '🎵', emoji_bg: '#3A2870', created_at: '' },
-  { id: '2', title: 'Réservation confirmée',     subtitle: 'PSG vs OM · Réf. HTG-D8E4C2',           time: 'Il y a 5h',     type: 'Réservation',  read: false, emoji: '✅', emoji_bg: '#0F3D2A', created_at: '' },
-  { id: '3', title: 'Nouvel event près de toi',  subtitle: "Bars Stand'art Café · Ménilmontant",     time: 'Il y a 3h',     type: 'Près de toi',  read: false, emoji: '🔥', emoji_bg: '#2A1A60', created_at: '' },
-  { id: '4', title: 'Plus que 5 places !',       subtitle: 'Carmen — Bizet · Opéra Garnier',         time: 'Hier',          type: 'Alerte',       read: true,  emoji: '⚡', emoji_bg: '#5C1A1A', created_at: '' },
-  { id: '5', title: 'Donnez votre avis',         subtitle: 'Monet & Lumière — votre expérience ?',   time: 'Hier',          type: 'Avis',         read: true,  emoji: '⭐', emoji_bg: '#4A3800', created_at: '' },
-  { id: '6', title: 'Concert près de toi',       subtitle: 'Networking tech · Paris 9e · Ce soir',   time: 'Il y a 2 jours', type: 'Concert',     read: true,  emoji: '🎵', emoji_bg: '#3A2870', created_at: '' },
-]
+const MOCK_NOTIFS: Notif[] = []
 
 export default function NotificationsScreen() {
   const { profile } = useAuthStore()
@@ -94,9 +91,21 @@ export default function NotificationsScreen() {
   }
 
   // Grouper par section (Aujourd'hui / Hier / Plus ancien)
-  const aujourd_hui = notifs.filter(n => !n.read || n.time.includes('h'))
-  const hier        = notifs.filter(n => n.read && n.time === 'Hier')
-  const ancien      = notifs.filter(n => n.read && n.time.includes('jours'))
+  const aujourd_hui = notifs.filter(n => {
+    if (!n.read) return true
+    const h = (Date.now() - new Date(n.created_at).getTime()) / 3600000
+    return h < 24
+  })
+  const hier = notifs.filter(n => {
+    if (!n.read) return false
+    const h = (Date.now() - new Date(n.created_at).getTime()) / 3600000
+    return h >= 24 && h < 48
+  })
+  const ancien = notifs.filter(n => {
+    if (!n.read) return false
+    const h = (Date.now() - new Date(n.created_at).getTime()) / 3600000
+    return h >= 48
+  })
 
   const unreadCount = notifs.filter(n => !n.read).length
 
@@ -205,9 +214,18 @@ function NotifCard({ notif, onPress }: { notif: Notif; onPress: () => void }) {
         <Text style={s.cardTitle}>{notif.title}</Text>
         <Text style={s.cardSub} numberOfLines={1}>{notif.subtitle}</Text>
         <View style={s.cardMeta}>
-          <Text style={s.cardTime}>{notif.time}</Text>
+          <Text style={s.cardTime}>{notif.created_at 
+  ? (() => {
+      const h = (Date.now() - new Date(notif.created_at).getTime()) / 3600000
+      if (h < 1) return 'Il y a moins d\'1h'
+      if (h < 24) return `Il y a ${Math.round(h)}h`
+      if (h < 48) return 'Hier'
+      return `Il y a ${Math.round(h/24)} jours`
+    })()
+  : notif.time ?? ''
+}</Text>
           <View style={[s.typeBadge, { backgroundColor: style.badge_bg }]}>
-            <Text style={[s.typeBadgeTxt, { color: style.badge_text }]}>{notif.type}</Text>
+            <Text style={[s.typeBadgeTxt, { color: style.badge_text }]}>{TYPE_LABEL[notif.type] ?? notif.type}</Text>
           </View>
         </View>
       </View>

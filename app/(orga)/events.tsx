@@ -30,12 +30,16 @@ export default function MesEventsScreen() {
   useEffect(() => {
     if (!profile) return
     supabase
-      .from('events')
-      .select('*')
-      .eq('organizer_id', profile.id)
-      .order('created_at', { ascending: false })
+    .from('events')
+    .select('*, reservations(count)')
+    .eq('organizer_id', profile.id)
+    .order('created_at', { ascending: false })
       .then(({ data }) => {
-        setEvents((data ?? []) as OrgaEvent[])
+        const mapped = (data ?? []).map((e: any) => ({
+          ...e,
+          reservations_count: e.reservations?.[0]?.count ?? 0,
+        }))
+        setEvents(mapped as OrgaEvent[])
         setLoading(false)
       })
   }, [profile?.id])
