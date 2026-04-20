@@ -9,7 +9,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/useAuthStore'
-import { useFavorites, Event, formatPrice, formatDistance, formatEventDate } from '../../hooks/useEvents'
+import { Event, formatPrice, formatDistance, formatEventDate } from '../../hooks/useEvents'
+import { useFavorites } from '../../hooks/useFavorites'
 import { CATEGORIES } from '../../constants/categories'
 import { Colors } from '../../constants/theme'
 
@@ -22,8 +23,8 @@ export default function EventDetailScreen() {
   const [qty, setQty] = useState(1)
   const [reserving, setReserving] = useState(false)
 
-  const { favoriteIds, toggle: toggleFav } = useFavorites(profile?.id)
-  const isFav = event ? favoriteIds.has(event.id) : false
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const isFav = event ? isFavorite(event.id) : false
 
   // Charge l'event + incrémente les vues uniques
   useEffect(() => {
@@ -113,7 +114,7 @@ export default function EventDetailScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.favBtn, isFav && styles.favBtnActive]}
-              onPress={() => toggleFav(event.id)}
+              onPress={() => toggleFavorite(event.id, event)}
             >
               <Text style={{ fontSize: 18 }}>{isFav ? '♥' : '♡'}</Text>
             </TouchableOpacity>

@@ -103,8 +103,9 @@ export default function MesEventsScreen() {
               <TouchableOpacity
                 key={e.id}
                 style={[s.eventCard, isDraft && s.eventCardDraft]}
+                onPress={() => router.push(`/(orga)/edit-event/${e.id}` as any)}
                 activeOpacity={0.8}
-              >
+>
                 {/* Barre latérale colorée */}
                 <View style={[s.colorBar, { backgroundColor: isDraft ? '#f59e0b' : '#22c55e' }]} />
 

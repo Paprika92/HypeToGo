@@ -4,14 +4,13 @@ import {
   TouchableOpacity, TextInput, Alert, ActivityIndicator,
   Keyboard,
 } from 'react-native'
-import { router } from 'expo-router'
-import { supabase } from '../../lib/supabase'
-import { useAuthStore } from '../../stores/useAuthStore'
-import { BottomNavbarOrga } from '../../components/BottomNavbarOrga'
-import { Colors } from '../../constants/theme'
-import { ALL_CATEGORIES, CATEGORIES } from '../../constants/categories'
-import { Category } from '../../hooks/useEvents'
-import { PhotoPicker } from '../../components/PhotoPicker'
+import { router, useLocalSearchParams } from 'expo-router'
+import { supabase } from '../../../lib/supabase'
+import { useAuthStore } from '../../../stores/useAuthStore'
+import { BottomNavbarOrga } from '../../../components/BottomNavbarOrga'
+import { Colors } from '../../../constants/theme'
+import { ALL_CATEGORIES, CATEGORIES } from '../../../constants/categories'
+import { Category } from '../../../hooks/useEvents'
 
 const PARIS_LAT = 48.8566
 const PARIS_LNG = 2.3522
@@ -21,21 +20,6 @@ interface AddressSuggestion {
   lat: string
   lon: string
   short: string
-}
-
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const query = encodeURIComponent(`${address}, Paris, France`)
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
-      { headers: { 'User-Agent': 'HypeToGo/1.0' } }
-    )
-    const data = await res.json()
-    if (data && data.length > 0) {
-      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
-    }
-    return null
-  } catch { return null }
 }
 
 async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
@@ -59,27 +43,63 @@ async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
   } catch { return [] }
 }
 
-export default function PublierScreen() {
+export default function EditEventScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>()
   const { profile } = useAuthStore()
 
-  const [title, setTitle]             = useState('')
-  const [date, setDate]               = useState('')
-  const [heure, setHeure]             = useState('')
-  const [lieu, setLieu]               = useState('')
+  const [loadingEvent, setLoadingEvent] = useState(true)
+  const [title, setTitle]       = useState('')
+  const [date, setDate]         = useState('')
+  const [heure, setHeure]       = useState('')
+  const [lieu, setLieu]         = useState('')
   const [selectedLat, setSelectedLat] = useState<number | null>(null)
   const [selectedLng, setSelectedLng] = useState<number | null>(null)
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
-  const [category, setCategory]       = useState<Category | null>(null)
-  const [description, setDesc]        = useState('')
-  const [ticketUrl, setTicketUrl]     = useState('')
-  const [price, setPrice]             = useState('0')
-  const [photos, setPhotos]           = useState<string[]>([])
-  const [loading, setLoading]         = useState(false)
-  const [geocoding, setGeocoding]     = useState(false)
+  const [category, setCategory] = useState<Category | null>(null)
+  const [description, setDesc]  = useState('')
+  const [ticketUrl, setTicketUrl] = useState('')
+  const [price, setPrice]       = useState('0')
+  const [loading, setLoading]   = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Charge l'event existant
+  useEffect(() => {
+    if (!id) return
+    supabase
+      .from('events')
+      .select('*')
+      .eq('id', id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setTitle(data.title ?? '')
+          setLieu(data.location_name ?? '')
+          setSelectedLat(data.lat)
+          setSelectedLng(data.lng)
+          setCategory(data.category as Category)
+          setDesc(data.description ?? '')
+          setTicketUrl(data.ticket_url ?? '')
+          setPrice(String(data.price ?? 0))
+
+          // Formater la date ISO en jj/mm/aaaa et hh:mm
+          if (data.date) {
+            const d = new Date(data.date)
+            const dd   = String(d.getDate()).padStart(2, '0')
+            const mm   = String(d.getMonth() + 1).padStart(2, '0')
+            const yyyy = d.getFullYear()
+            const hh   = String(d.getHours()).padStart(2, '0')
+            const min  = String(d.getMinutes()).padStart(2, '0')
+            setDate(`${dd}/${mm}/${yyyy}`)
+            setHeure(`${hh}:${min}`)
+          }
+        }
+        setLoadingEvent(false)
+      })
+  }, [id])
+
+  // Autocomplétion adresse
   useEffect(() => {
     if (lieu.trim().length < 3 || selectedLat !== null) {
       setSuggestions([])
@@ -111,8 +131,8 @@ export default function PublierScreen() {
     setSelectedLng(null)
   }
 
-  const handlePublish = async () => {
-    if (!profile) return
+  const handleUpdate = async () => {
+    if (!profile || !id) return
     if (!title.trim() || !date.trim() || !heure.trim() || !lieu.trim() || !category) {
       Alert.alert('Champs manquants', 'Titre, date, heure, lieu et catégorie sont obligatoires.')
       return
@@ -120,15 +140,8 @@ export default function PublierScreen() {
 
     setLoading(true)
     try {
-      let lat = selectedLat ?? PARIS_LAT
-      let lng = selectedLng ?? PARIS_LNG
-
-      if (!selectedLat) {
-        setGeocoding(true)
-        const coords = await geocodeAddress(lieu.trim())
-        setGeocoding(false)
-        if (coords) { lat = coords.lat; lng = coords.lng }
-      }
+      const lat = selectedLat ?? PARIS_LAT
+      const lng = selectedLng ?? PARIS_LNG
 
       const parts = date.split(/[\/\-]/)
       const day   = parts[0]?.padStart(2, '0')
@@ -136,31 +149,57 @@ export default function PublierScreen() {
       const year  = parts[2]
       const isoDate = `${year}-${month}-${day}T${heure}:00+02:00`
 
-      const { error } = await supabase.from('events').insert({
-        organizer_id:  profile.id,
-        title:         title.trim(),
-        category,
-        description:   description.trim() || null,
-        location_name: lieu.trim(),
-        lat, lng,
-        date:          isoDate,
-        price:         parseFloat(price) || 0,
-        ticket_url:    ticketUrl.trim() || null,
-        photos:        photos,
-        status:        'published',
-      })
+      const { error } = await supabase
+        .from('events')
+        .update({
+          title:         title.trim(),
+          category,
+          description:   description.trim() || null,
+          location_name: lieu.trim(),
+          lat, lng,
+          date:          isoDate,
+          price:         parseFloat(price) || 0,
+          ticket_url:    ticketUrl.trim() || null,
+        })
+        .eq('id', id)
+        .eq('organizer_id', profile.id) // sécurité — seul l'orga proprio peut modifier
 
       if (error) throw error
 
-      Alert.alert('✅ Publié !', 'Ton évènement est visible sur la carte !', [
+      Alert.alert('✅ Mis à jour !', 'Ton évènement a bien été modifié.', [
         { text: 'Voir mes events', onPress: () => router.push('/(orga)/events' as any) },
       ])
     } catch (e: any) {
-      Alert.alert('Erreur', e.message ?? 'Impossible de publier')
+      Alert.alert('Erreur', e.message ?? 'Impossible de modifier')
     } finally {
       setLoading(false)
-      setGeocoding(false)
     }
+  }
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Supprimer l\'évènement',
+      'Cette action est irréversible. Es-tu sûr ?',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            await supabase.from('events').delete().eq('id', id).eq('organizer_id', profile!.id)
+            router.push('/(orga)/events' as any)
+          },
+        },
+      ]
+    )
+  }
+
+  if (loadingEvent) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0d0b1a', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color={Colors.purpleLight} size="large" />
+      </View>
+    )
   }
 
   return (
@@ -169,7 +208,7 @@ export default function PublierScreen() {
         <TouchableOpacity style={s.backBtn} onPress={() => router.back()}>
           <Text style={s.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={s.title}>Publier un évènement</Text>
+        <Text style={s.title}>Modifier l'évènement</Text>
       </View>
       <View style={s.divider} />
 
@@ -178,6 +217,7 @@ export default function PublierScreen() {
         contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Titre */}
         <Text style={s.label}>Titre de l'évènement *</Text>
         <TextInput
           style={s.input}
@@ -187,6 +227,7 @@ export default function PublierScreen() {
           onChangeText={setTitle}
         />
 
+        {/* Date + Heure */}
         <View style={s.row}>
           <View style={{ flex: 1 }}>
             <Text style={s.label}>Date *</Text>
@@ -212,6 +253,7 @@ export default function PublierScreen() {
           </View>
         </View>
 
+        {/* Lieu avec autocomplétion */}
         <Text style={s.label}>Lieu *</Text>
         <View style={s.lieuWrapper}>
           <View style={[s.input, s.lieuInput, selectedLat ? s.lieuConfirmed : null]}>
@@ -228,6 +270,7 @@ export default function PublierScreen() {
             )}
             {selectedLat && <Text style={s.confirmedIcon}>✅</Text>}
           </View>
+
           {showSuggestions && suggestions.length > 0 && (
             <View style={s.suggestionsBox}>
               {suggestions.map((sug, i) => (
@@ -252,6 +295,7 @@ export default function PublierScreen() {
           )}
         </View>
 
+        {/* Prix */}
         <Text style={s.label}>Prix (€) — 0 pour Gratuit</Text>
         <TextInput
           style={s.input}
@@ -262,6 +306,7 @@ export default function PublierScreen() {
           keyboardType="decimal-pad"
         />
 
+        {/* Catégorie */}
         <Text style={s.label}>Catégorie *</Text>
         <View style={s.catGrid}>
           {ALL_CATEGORIES.map(cat => {
@@ -278,6 +323,7 @@ export default function PublierScreen() {
           })}
         </View>
 
+        {/* Description */}
         <Text style={s.label}>Description</Text>
         <TextInput
           style={[s.input, s.textarea]}
@@ -290,6 +336,7 @@ export default function PublierScreen() {
           textAlignVertical="top"
         />
 
+        {/* Lien billeterie */}
         <Text style={s.label}>Lien billeterie / Site</Text>
         <TextInput
           style={s.input}
@@ -301,29 +348,26 @@ export default function PublierScreen() {
           autoCapitalize="none"
         />
 
-        {/* Photos avec vrai upload */}
-        <Text style={s.label}>Photos de l'évènement</Text>
-        <PhotoPicker
-          photos={photos}
-          onChange={setPhotos}
-          organizerId={profile?.id ?? ''}
-        />
-
+        {/* Bouton mettre à jour */}
         <TouchableOpacity
-          style={[s.publishBtn, loading && { opacity: 0.7 }]}
-          onPress={handlePublish}
+          style={[s.updateBtn, loading && { opacity: 0.7 }]}
+          onPress={handleUpdate}
           disabled={loading}
           activeOpacity={0.85}
         >
           {loading
-            ? <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-                <ActivityIndicator color="#fff" />
-                <Text style={s.publishBtnTxt}>
-                  {geocoding ? 'Géolocalisation...' : 'Publication...'}
-                </Text>
-              </View>
-            : <Text style={s.publishBtnTxt}>Publier l'évènement →</Text>
+            ? <ActivityIndicator color="#fff" />
+            : <Text style={s.updateBtnTxt}>Mettre à jour →</Text>
           }
+        </TouchableOpacity>
+
+        {/* Bouton supprimer */}
+        <TouchableOpacity
+          style={s.deleteBtn}
+          onPress={handleDelete}
+          activeOpacity={0.85}
+        >
+          <Text style={s.deleteBtnTxt}>🗑 Supprimer l'évènement</Text>
         </TouchableOpacity>
 
         <View style={{ height: 40 }} />
@@ -361,6 +405,8 @@ const s = StyleSheet.create({
   catChip:          { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#13112a', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.12)' },
   catChipActive:    { backgroundColor: Colors.purple, borderColor: Colors.purple },
   catChipTxt:       { color: '#fff', fontSize: 13, fontWeight: '600' },
-  publishBtn:       { backgroundColor: Colors.purple, borderRadius: 50, paddingVertical: 18, alignItems: 'center', marginBottom: 8 },
-  publishBtnTxt:    { color: '#fff', fontSize: 16, fontWeight: '700' },
+  updateBtn:        { backgroundColor: Colors.purple, borderRadius: 50, paddingVertical: 18, alignItems: 'center', marginBottom: 12 },
+  updateBtnTxt:     { color: '#fff', fontSize: 16, fontWeight: '700' },
+  deleteBtn:        { backgroundColor: '#7A1A1A', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginBottom: 8 },
+  deleteBtnTxt:     { color: '#fff', fontSize: 14, fontWeight: '600' },
 })
