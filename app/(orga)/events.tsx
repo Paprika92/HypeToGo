@@ -31,13 +31,13 @@ export default function MesEventsScreen() {
     if (!profile) return
     supabase
     .from('events')
-    .select('*, reservations(count)')
+    .select('*, reservations(quantity)')
     .eq('organizer_id', profile.id)
     .order('created_at', { ascending: false })
       .then(({ data }) => {
         const mapped = (data ?? []).map((e: any) => ({
           ...e,
-          reservations_count: e.reservations?.[0]?.count ?? 0,
+          reservations_count: (e.reservations ?? []).reduce((acc: number, r: any) => acc + (r.quantity ?? 0), 0),
         }))
         setEvents(mapped as OrgaEvent[])
         setLoading(false)
