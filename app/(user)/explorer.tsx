@@ -8,6 +8,7 @@ import { BottomNavbar } from '../../components/BottomNavbar'
 import { Colors } from '../../constants/theme'
 import { useLocation } from '../../hooks/useLocation'
 import { useEvents, Category, formatPrice, formatDistance, formatEventDate } from '../../hooks/useEvents'
+import { useAuthStore } from '../../stores/useAuthStore'
 
 // ─── Config catégories ────────────────────────────────────────────────────────
 
@@ -53,15 +54,18 @@ export default function ExplorerScreen() {
   const [selQuand, setSelQuand] = useState('Aujd')
 
   const { location } = useLocation()
+  const { profile } = useAuthStore()
+const favoriteCats: string[] = (profile as any)?.favorite_categories ?? []
 
-  const { events, loading, error, refetch } = useEvents({
-    lat:      location.lat,
-    lng:      location.lng,
-    category: selCat,
-    onlyFree: selPrix === 'Gratuit',
-    radiusKm: 12,
-    enabled:  true,
-  })
+const { events, loading, error, refetch } = useEvents({
+  lat:      location.lat,
+  lng:      location.lng,
+  category: selCat,
+  onlyFree: selPrix === 'Gratuit',
+  radiusKm: 12,
+  enabled:  true,
+  favoriteCats,
+})
 
   // Filtre côté client pour Payant et Quand
   // (onlyFree est géré côté Supabase, Payant et Quand on filtre ici)

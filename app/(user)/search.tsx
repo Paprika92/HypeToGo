@@ -22,7 +22,7 @@ interface SearchEvent {
   lng: number
 }
 
-const SUGGESTIONS = ['Jazz', 'Sport', 'Concert', 'Stand-up', 'Exposition', 'Bars', 'Théâtre', 'E-Sport']
+const SUGGESTIONS = ['Concerts', 'Sport', 'Stand-up', 'Exposition', 'Bars & Soirées', 'Théâtre', 'E-Sport']
 
 export default function SearchScreen() {
   const [query, setQuery] = useState('')
@@ -41,21 +41,46 @@ export default function SearchScreen() {
       setResults([])
       return
     }
-
+  
     const timer = setTimeout(async () => {
       setLoading(true)
-      const { data } = await supabase
+  
+      // Vérifie si la query correspond à une catégorie
+      const catMap: Record<string, string> = {
+        'concert': 'concerts', 'concerts': 'concerts',
+        'sport': 'sport',
+        'stand-up': 'standup', 'standup': 'standup', 'stand up': 'standup',
+        'expo': 'expos', 'exposition': 'expos', 'expos': 'expos',
+        'bar': 'bars', 'bars': 'bars', 'soirée': 'bars', 'soiree': 'bars',
+        'bars & soirées': 'bars', 'bars & soirees': 'bars',
+        'bar & soirée': 'bars', 'bar & soiree': 'bars',
+        'esport': 'esport', 'e-sport': 'esport',
+        'théâtre': 'theatre', 'theatre': 'theatre',
+        'jazz': 'concerts',
+      }
+      const normalized = query.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+const catKey = catMap[normalized]
+  
+      let queryBuilder = supabase
         .from('events')
         .select('*')
         .eq('status', 'published')
-        .ilike('title', `%${query.trim()}%`)
         .order('date', { ascending: true })
         .limit(20)
-
+  
+      if (catKey) {
+        // Recherche par catégorie
+        queryBuilder = queryBuilder.eq('category', catKey)
+      } else {
+        // Recherche par titre
+        queryBuilder = queryBuilder.ilike('title', `%${query.trim()}%`)
+      }
+  
+      const { data } = await queryBuilder
       setResults((data ?? []) as SearchEvent[])
       setLoading(false)
     }, 300)
-
+  
     return () => clearTimeout(timer)
   }, [query])
 
@@ -65,7 +90,7 @@ export default function SearchScreen() {
   }
 
   const handleSuggestion = (s: string) => {
-    setQuery(s)
+    setQuery(s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
   }
 
   return (

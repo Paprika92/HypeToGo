@@ -4,6 +4,7 @@ import {
   Image, Alert, ActivityIndicator, ScrollView,
 } from 'react-native'
 import * as ImagePicker from 'expo-image-picker'
+import * as ImageManipulator from 'expo-image-manipulator'
 import { supabase } from '../lib/supabase'
 import { Colors } from '../constants/theme'
 
@@ -11,93 +12,111 @@ const MAX_PHOTOS = 3
 const MAX_SIZE_MB = 5
 
 interface PhotoPickerProps {
-  photos: string[]           // URLs des photos déjà uploadées
+  photos: string[]
   onChange: (urls: string[]) => void
   organizerId: string
-  eventId?: string           // optionnel — pour organiser dans le bucket
+  eventId?: string
 }
 
 export function PhotoPicker({ photos, onChange, organizerId, eventId }: PhotoPickerProps) {
   const [uploading, setUploading] = useState(false)
 
+  const uploadAsset = async (uri: string): Promise<string | null> => {
+    try {
+      const manipulated = await ImageManipulator.manipulateAsync(
+        uri, [], { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+      )
+  
+      const timestamp = Date.now()
+      const fileName = `${organizerId}/${eventId ?? 'new'}/${timestamp}_${Math.random().toString(36).substring(2, 7)}.jpg`
+  
+      const formData = new FormData()
+      formData.append('file', {
+        uri: manipulated.uri,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      } as any)
+  
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+  
+      const uploadUrl = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/storage/v1/object/event_photos/${fileName}`
+  
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!,
+          'x-upsert': 'false',
+        },
+        body: formData,
+      })
+  
+      if (!response.ok) {
+        const err = await response.text()
+        Alert.alert('Erreur upload', err)
+        return null
+      }
+  
+      const { data: urlData } = supabase.storage.from('event_photos').getPublicUrl(fileName)
+      return urlData?.publicUrl ?? null
+  
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message)
+      return null
+    }
+  }
+
   const pickAndUpload = async () => {
     if (photos.length >= MAX_PHOTOS) {
-      Alert.alert('Maximum atteint', `Tu peux ajouter au maximum ${MAX_PHOTOS} photos.`)
+      Alert.alert('Maximum atteint', `Max ${MAX_PHOTOS} photos.`)
       return
     }
-
-    // Demander la permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== 'granted') {
-      Alert.alert('Permission refusée', 'Active l\'accès à la galerie dans les réglages.')
+      Alert.alert('Permission refusée', "Active l'accès à la galerie dans les réglages.")
       return
     }
-
-    // Ouvrir le picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       selectionLimit: MAX_PHOTOS - photos.length,
-      quality: 0.8, // compression légère
+      quality: 0.8,
       allowsEditing: false,
     })
-
     if (result.canceled) return
-
     setUploading(true)
     const newUrls: string[] = []
-
     for (const asset of result.assets) {
-      // Vérifier le poids
       if (asset.fileSize && asset.fileSize > MAX_SIZE_MB * 1024 * 1024) {
-        Alert.alert('Photo trop lourde', `"${asset.fileName}" dépasse ${MAX_SIZE_MB} Mo. Elle a été ignorée.`)
+        Alert.alert('Photo trop lourde', `Dépasse ${MAX_SIZE_MB} Mo.`)
         continue
       }
-
-      // Vérifier le format
-      const ext = asset.uri.split('.').pop()?.toLowerCase()
-      const allowed = ['jpg', 'jpeg', 'png', 'heic', 'heif']
-      if (ext && !allowed.includes(ext)) {
-        Alert.alert('Format non supporté', `Seuls JPG, PNG et HEIC sont acceptés.`)
-        continue
-      }
-
-      try {
-        // Lire le fichier en base64
-        const response = await fetch(asset.uri)
-        const blob = await response.blob()
-
-        // Nom de fichier unique
-        const timestamp = Date.now()
-        const fileName = `${organizerId}/${eventId ?? 'new'}/${timestamp}_${Math.random().toString(36).substring(2, 7)}.${ext ?? 'jpg'}`
-
-        // Upload vers Supabase Storage
-        const { error } = await supabase.storage
-          .from('event_photos')
-          .upload(fileName, blob, {
-            contentType: asset.mimeType ?? 'image/jpeg',
-            upsert: false,
-          })
-
-        if (error) {
-          Alert.alert('Erreur upload', error.message)
-          continue
-        }
-
-        // Récupérer l'URL publique
-        const { data: urlData } = supabase.storage
-          .from('event_photos')
-          .getPublicUrl(fileName)
-
-        if (urlData?.publicUrl) {
-          newUrls.push(urlData.publicUrl)
-        }
-      } catch (e: any) {
-        Alert.alert('Erreur', e.message ?? 'Impossible d\'uploader cette photo')
-      }
+      const url = await uploadAsset(asset.uri)
+      if (url) newUrls.push(url)
     }
-
     onChange([...photos, ...newUrls])
+    setUploading(false)
+  }
+
+  const takePhoto = async () => {
+    if (photos.length >= MAX_PHOTOS) {
+      Alert.alert('Maximum atteint', `Max ${MAX_PHOTOS} photos.`)
+      return
+    }
+    const { status } = await ImagePicker.requestCameraPermissionsAsync()
+    if (status !== 'granted') {
+      Alert.alert('Permission refusée', "Active l'accès à la caméra dans les réglages.")
+      return
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      quality: 0.8,
+      allowsEditing: false,
+    })
+    if (result.canceled) return
+    setUploading(true)
+    const url = await uploadAsset(result.assets[0].uri)
+    if (url) onChange([...photos, url])
     setUploading(false)
   }
 
@@ -107,26 +126,19 @@ export function PhotoPicker({ photos, onChange, organizerId, eventId }: PhotoPic
       {
         text: 'Supprimer',
         style: 'destructive',
-        onPress: () => {
-          const updated = photos.filter((_, i) => i !== index)
-          onChange(updated)
-        },
+        onPress: () => onChange(photos.filter((_, i) => i !== index)),
       },
     ])
   }
 
   return (
     <View style={s.container}>
-      {/* Photos existantes */}
       {photos.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.photoRow}>
           {photos.map((url, i) => (
             <View key={i} style={s.photoThumb}>
-              <Image source={{ uri: url }} style={s.photoImg} />
-              <TouchableOpacity
-                style={s.removeBtn}
-                onPress={() => removePhoto(i)}
-              >
+              <Image source={{ uri: url }} style={s.photoImg} resizeMode="cover" />
+              <TouchableOpacity style={s.removeBtn} onPress={() => removePhoto(i)}>
                 <Text style={s.removeBtnTxt}>✕</Text>
               </TouchableOpacity>
             </View>
@@ -134,37 +146,46 @@ export function PhotoPicker({ photos, onChange, organizerId, eventId }: PhotoPic
         </ScrollView>
       )}
 
-      {/* Bouton ajouter */}
       {photos.length < MAX_PHOTOS && (
-        <TouchableOpacity
-          style={[s.addBtn, uploading && { opacity: 0.6 }]}
-          onPress={pickAndUpload}
-          disabled={uploading}
-          activeOpacity={0.8}
-        >
-          {uploading ? (
-            <View style={s.addBtnInner}>
-              <ActivityIndicator color={Colors.purpleLight} size="small" />
-              <Text style={s.addBtnTxt}>Upload en cours...</Text>
-            </View>
-          ) : (
+        <View style={s.addBtnsRow}>
+          <TouchableOpacity
+            style={[s.addBtn, s.addBtnHalf, uploading && { opacity: 0.6 }]}
+            onPress={pickAndUpload}
+            disabled={uploading}
+            activeOpacity={0.8}
+          >
+            {uploading ? (
+              <View style={s.addBtnInner}>
+                <ActivityIndicator color={Colors.purpleLight} size="small" />
+                <Text style={s.addBtnTxt}>Upload...</Text>
+              </View>
+            ) : (
+              <View style={s.addBtnInner}>
+                <Text style={s.addBtnIcon}>🖼️</Text>
+                <Text style={s.addBtnTxt}>Galerie</Text>
+                <Text style={s.addBtnSub}>{photos.length}/{MAX_PHOTOS}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[s.addBtn, s.addBtnHalf, uploading && { opacity: 0.6 }]}
+            onPress={takePhoto}
+            disabled={uploading}
+            activeOpacity={0.8}
+          >
             <View style={s.addBtnInner}>
               <Text style={s.addBtnIcon}>📷</Text>
-              <Text style={s.addBtnTxt}>
-                {photos.length === 0
-                  ? 'Clique pour ajouter des photos'
-                  : `Ajouter une photo (${photos.length}/${MAX_PHOTOS})`}
-              </Text>
-              <Text style={s.addBtnSub}>JPG, PNG, HEIC · Max {MAX_SIZE_MB} Mo chacune</Text>
+              <Text style={s.addBtnTxt}>Caméra</Text>
+              <Text style={s.addBtnSub}>Prendre une photo</Text>
             </View>
-          )}
-        </TouchableOpacity>
+          </TouchableOpacity>
+        </View>
       )}
 
-      {/* Compteur */}
       {photos.length === MAX_PHOTOS && (
         <View style={s.maxReached}>
-          <Text style={s.maxReachedTxt}>✅ {MAX_PHOTOS} photos ajoutées — maximum atteint</Text>
+          <Text style={s.maxReachedTxt}>✅ {MAX_PHOTOS} photos — maximum atteint</Text>
         </View>
       )}
     </View>
@@ -178,6 +199,8 @@ const s = StyleSheet.create({
   photoImg:     { width: 100, height: 100, borderRadius: 12 },
   removeBtn:    { position: 'absolute', top: 4, right: 4, backgroundColor: 'rgba(0,0,0,0.7)', width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
   removeBtnTxt: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  addBtnsRow:   { flexDirection: 'row', gap: 10 },
+  addBtnHalf:   { flex: 1 },
   addBtn:       { backgroundColor: '#13112a', borderRadius: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', borderStyle: 'dashed', paddingVertical: 28 },
   addBtnInner:  { alignItems: 'center', gap: 6 },
   addBtnIcon:   { fontSize: 32 },

@@ -11,9 +11,12 @@ import { BottomNavbarOrga } from '../../../components/BottomNavbarOrga'
 import { Colors } from '../../../constants/theme'
 import { ALL_CATEGORIES, CATEGORIES } from '../../../constants/categories'
 import { Category } from '../../../hooks/useEvents'
+import { PhotoPicker } from '../../../components/PhotoPicker'
+
 
 const PARIS_LAT = 48.8566
 const PARIS_LNG = 2.3522
+
 
 interface AddressSuggestion {
   display_name: string
@@ -48,23 +51,23 @@ export default function EditEventScreen() {
   const { profile } = useAuthStore()
 
   const [loadingEvent, setLoadingEvent] = useState(true)
-  const [title, setTitle]       = useState('')
-  const [date, setDate]         = useState('')
-  const [heure, setHeure]       = useState('')
-  const [lieu, setLieu]         = useState('')
-  const [selectedLat, setSelectedLat] = useState<number | null>(null)
-  const [selectedLng, setSelectedLng] = useState<number | null>(null)
-  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([])
-  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [title, setTitle]               = useState('')
+  const [date, setDate]                 = useState('')
+  const [heure, setHeure]               = useState('')
+  const [lieu, setLieu]                 = useState('')
+  const [selectedLat, setSelectedLat]   = useState<number | null>(null)
+  const [selectedLng, setSelectedLng]   = useState<number | null>(null)
+  const [suggestions, setSuggestions]   = useState<AddressSuggestion[]>([])
+  const [showSuggestions, setShowSuggestions]     = useState(false)
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
-  const [category, setCategory] = useState<Category | null>(null)
-  const [description, setDesc]  = useState('')
-  const [ticketUrl, setTicketUrl] = useState('')
-  const [price, setPrice]       = useState('0')
-  const [loading, setLoading]   = useState(false)
+  const [category, setCategory]         = useState<Category | null>(null)
+  const [description, setDesc]          = useState('')
+  const [ticketUrl, setTicketUrl]       = useState('')
+  const [price, setPrice]               = useState('0')
+  const [photos, setPhotos]             = useState<string[]>([])
+  const [loading, setLoading]           = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  // Charge l'event existant
   useEffect(() => {
     if (!id) return
     supabase
@@ -82,10 +85,9 @@ export default function EditEventScreen() {
           setDesc(data.description ?? '')
           setTicketUrl(data.ticket_url ?? '')
           setPrice(String(data.price ?? 0))
-
-          // Formater la date ISO en jj/mm/aaaa et hh:mm
+          setPhotos(data.photos ?? [])
           if (data.date) {
-            const d = new Date(data.date)
+            const d    = new Date(data.date)
             const dd   = String(d.getDate()).padStart(2, '0')
             const mm   = String(d.getMonth() + 1).padStart(2, '0')
             const yyyy = d.getFullYear()
@@ -99,7 +101,6 @@ export default function EditEventScreen() {
       })
   }, [id])
 
-  // Autocomplétion adresse
   useEffect(() => {
     if (lieu.trim().length < 3 || selectedLat !== null) {
       setSuggestions([])
@@ -137,12 +138,10 @@ export default function EditEventScreen() {
       Alert.alert('Champs manquants', 'Titre, date, heure, lieu et catégorie sont obligatoires.')
       return
     }
-
     setLoading(true)
     try {
-      const lat = selectedLat ?? PARIS_LAT
-      const lng = selectedLng ?? PARIS_LNG
-
+      const lat   = selectedLat ?? PARIS_LAT
+      const lng   = selectedLng ?? PARIS_LNG
       const parts = date.split(/[\/\-]/)
       const day   = parts[0]?.padStart(2, '0')
       const month = parts[1]?.padStart(2, '0')
@@ -160,12 +159,12 @@ export default function EditEventScreen() {
           date:          isoDate,
           price:         parseFloat(price) || 0,
           ticket_url:    ticketUrl.trim() || null,
+          photos,
         })
         .eq('id', id)
-        .eq('organizer_id', profile.id) // sécurité — seul l'orga proprio peut modifier
+        .eq('organizer_id', profile.id)
 
       if (error) throw error
-
       Alert.alert('✅ Mis à jour !', 'Ton évènement a bien été modifié.', [
         { text: 'Voir mes events', onPress: () => router.push('/(orga)/events' as any) },
       ])
@@ -217,7 +216,6 @@ export default function EditEventScreen() {
         contentContainerStyle={s.scroll}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Titre */}
         <Text style={s.label}>Titre de l'évènement *</Text>
         <TextInput
           style={s.input}
@@ -227,7 +225,6 @@ export default function EditEventScreen() {
           onChangeText={setTitle}
         />
 
-        {/* Date + Heure */}
         <View style={s.row}>
           <View style={{ flex: 1 }}>
             <Text style={s.label}>Date *</Text>
@@ -253,7 +250,6 @@ export default function EditEventScreen() {
           </View>
         </View>
 
-        {/* Lieu avec autocomplétion */}
         <Text style={s.label}>Lieu *</Text>
         <View style={s.lieuWrapper}>
           <View style={[s.input, s.lieuInput, selectedLat ? s.lieuConfirmed : null]}>
@@ -270,7 +266,6 @@ export default function EditEventScreen() {
             )}
             {selectedLat && <Text style={s.confirmedIcon}>✅</Text>}
           </View>
-
           {showSuggestions && suggestions.length > 0 && (
             <View style={s.suggestionsBox}>
               {suggestions.map((sug, i) => (
@@ -295,7 +290,6 @@ export default function EditEventScreen() {
           )}
         </View>
 
-        {/* Prix */}
         <Text style={s.label}>Prix (€) — 0 pour Gratuit</Text>
         <TextInput
           style={s.input}
@@ -306,7 +300,6 @@ export default function EditEventScreen() {
           keyboardType="decimal-pad"
         />
 
-        {/* Catégorie */}
         <Text style={s.label}>Catégorie *</Text>
         <View style={s.catGrid}>
           {ALL_CATEGORIES.map(cat => {
@@ -323,7 +316,6 @@ export default function EditEventScreen() {
           })}
         </View>
 
-        {/* Description */}
         <Text style={s.label}>Description</Text>
         <TextInput
           style={[s.input, s.textarea]}
@@ -336,7 +328,6 @@ export default function EditEventScreen() {
           textAlignVertical="top"
         />
 
-        {/* Lien billeterie */}
         <Text style={s.label}>Lien billeterie / Site</Text>
         <TextInput
           style={s.input}
@@ -348,7 +339,14 @@ export default function EditEventScreen() {
           autoCapitalize="none"
         />
 
-        {/* Bouton mettre à jour */}
+        <Text style={s.label}>Photos de l'évènement</Text>
+        <PhotoPicker
+          photos={photos}
+          onChange={setPhotos}
+          organizerId={profile?.id ?? ''}
+          eventId={id}
+        />
+
         <TouchableOpacity
           style={[s.updateBtn, loading && { opacity: 0.7 }]}
           onPress={handleUpdate}
@@ -361,7 +359,6 @@ export default function EditEventScreen() {
           }
         </TouchableOpacity>
 
-        {/* Bouton supprimer */}
         <TouchableOpacity
           style={s.deleteBtn}
           onPress={handleDelete}

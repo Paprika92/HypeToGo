@@ -6,7 +6,6 @@ import {
 } from 'react-native'
 import MapView, { PROVIDER_DEFAULT, Region } from 'react-native-maps'
 import { router } from 'expo-router'
-import { LinearGradient } from 'expo-linear-gradient'
 
 import { useLocation } from '../../hooks/useLocation'
 import { useEvents, Event } from '../../hooks/useEvents'
@@ -18,8 +17,6 @@ import { EventBottomSheet } from '../../components/EventBottomSheet'
 import { CategoryChips } from '../../components/CategoryChips'
 import { BottomNavbar } from '../../components/BottomNavbar'
 import { Colors, PARIS_BOUNDS } from '../../constants/theme'
-
-const { height } = Dimensions.get('window')
 
 const INITIAL_REGION: Region = {
   latitude: PARIS_BOUNDS.centerLat,
@@ -35,28 +32,19 @@ export default function HomeScreen() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const mapRef = useRef<MapView>(null)
 
+  const favoriteCats: string[] = (profile as any)?.favorite_categories ?? []
+
   const { events, loading: eventsLoading } = useEvents({
     lat: location.lat,
     lng: location.lng,
     category,
     enabled: !locLoading,
+    favoriteCats,
   })
 
   const handlePinPress = useCallback((event: Event) => {
-    if (selectedEventId === event.id) {
-      // Déjà sélectionné → navigue vers le détail
-      router.push(`/event/${event.id}`)
-      return
-    }
-    // Première fois → sélectionne et centre
-    setSelectedEventId(event.id)
-    mapRef.current?.animateToRegion({
-      latitude: event.lat - 0.008,
-      longitude: event.lng,
-      latitudeDelta: 0.04,
-      longitudeDelta: 0.03,
-    }, 350)
-  }, [selectedEventId])
+    router.push(`/event/${event.id}` as any)
+  }, [])
 
   const handleCategoryChange = useCallback((cat: Category | null) => {
     setCategory(cat)
@@ -69,17 +57,14 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
-      {/* ── Header ─────────────────────────────────────── */}
+      {/* ── Header ── */}
       <SafeAreaView style={styles.header}>
         <View style={styles.headerRow}>
-          {/* Logo */}
           <Text style={styles.logo}>
             <Text style={{ color: '#a78bfa' }}>Hype</Text>
             <Text style={{ color: '#7c3aed' }}>To</Text>
             <Text style={{ color: '#c084fc' }}>Go</Text>
           </Text>
-
-          {/* Cloche notif */}
           <TouchableOpacity
             style={styles.bellBtn}
             onPress={() => router.push('/(user)/notifications')}
@@ -89,34 +74,27 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Barre de recherche */}
         <View style={styles.searchBar}>
-  <TouchableOpacity
-    style={{ flex: 1, height: '100%', justifyContent: 'center' }}
-    onPress={() => router.push('/(user)/search')}
-    activeOpacity={0.85}
-  >
-    <Text style={styles.searchPlaceholder}>
-      Rechercher un évènement...
-    </Text>
-  </TouchableOpacity>
-  <TouchableOpacity
-    style={styles.filtresBtn}
-    onPress={() => router.push('/(user)/explorer')}
-    activeOpacity={0.85}
-  >
-    <Text style={styles.filtresTxt}>Filtres</Text>
-  </TouchableOpacity>
-</View>
+          <TouchableOpacity
+            style={{ flex: 1, height: '100%', justifyContent: 'center' }}
+            onPress={() => router.push('/(user)/search')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.searchPlaceholder}>Rechercher un évènement...</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.filtresBtn}
+            onPress={() => router.push('/(user)/explorer')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.filtresTxt}>Filtres</Text>
+          </TouchableOpacity>
+        </View>
 
-        {/* Chips catégories */}
-        <CategoryChips
-          selected={category}
-          onChange={handleCategoryChange}
-        />
+        <CategoryChips selected={category} onChange={handleCategoryChange} />
       </SafeAreaView>
 
-      {/* ── Carte ──────────────────────────────────────── */}
+      {/* ── Carte ── */}
       <View style={styles.mapContainer}>
         <MapView
           ref={mapRef}
@@ -141,7 +119,6 @@ export default function HomeScreen() {
           ))}
         </MapView>
 
-        {/* Spinner overlay pendant le chargement */}
         {isLoading && (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator color={Colors.purpleLight} size="large" />
@@ -151,26 +128,20 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Badge position réelle ou Paris par défaut */}
         {!isLoading && !location.isRealGPS && (
           <TouchableOpacity style={styles.locBadge}>
             <Text style={styles.locBadgeText}>📍 Paris (par défaut)</Text>
           </TouchableOpacity>
         )}
 
-        {/* Bottom sheet avec les events */}
         {!isLoading && (
           <EventBottomSheet
-          events={[
-            ...events.filter(e => e.id === selectedEventId),
-            ...events.filter(e => e.id !== selectedEventId),
-          ].slice(0, 8)}
-          selectedId={selectedEventId}
-          onCardPress={handlePinPress}
-        />
+            events={events.slice(0, 8)}
+            selectedId={selectedEventId}
+            onCardPress={(event) => router.push(`/event/${event.id}` as any)}
+          />
         )}
 
-        {/* Aucun event */}
         {!isLoading && events.length === 0 && (
           <View style={styles.emptyMap}>
             <Text style={styles.emptyText}>
@@ -180,134 +151,31 @@ export default function HomeScreen() {
         )}
       </View>
 
-      {/* ── Bottom Navbar ───────────────────────────────── */}
       <BottomNavbar active="carte" />
     </View>
   )
 }
 
-// ── Styles ──────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-  },
-  header: {
-    backgroundColor: Colors.bg,
-    zIndex: 10,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-  },
-  logo: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  bellBtn: {
-    width: 40,
-    height: 40,
-    backgroundColor: Colors.bg3,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  bellDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    backgroundColor: Colors.red,
-    borderRadius: 4,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',    // ← ajoute ça
-    backgroundColor: Colors.bg3,
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    borderRadius: 50,
-    marginHorizontal: 16,
-    marginBottom: 10,
-    paddingLeft: 18,
-    paddingRight: 6,
-    height: 48,
-  },
-  searchPlaceholder: {
-    flex: 1,
-    color: Colors.text3,
-    fontSize: 15,
-  },
-  filtresBtn: {
-    backgroundColor: Colors.purple,
-    borderRadius: 22,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  filtresTxt: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  mapContainer: {
-    flex: 1,
-    position: 'relative',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(10,9,18,0.7)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    color: Colors.text2,
-    fontSize: 14,
-  },
-  locBadge: {
-    position: 'absolute',
-    top: 12,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(18,15,32,0.9)',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  locBadgeText: {
-    color: Colors.text2,
-    fontSize: 12,
-  },
-  emptyMap: {
-    position: 'absolute',
-    top: '40%',
-    left: 24,
-    right: 24,
-    backgroundColor: 'rgba(18,15,32,0.9)',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-  },
-  emptyText: {
-    color: Colors.text2,
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+  container:      { flex: 1, backgroundColor: Colors.bg },
+  header:         { backgroundColor: Colors.bg, zIndex: 10 },
+  headerRow:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  logo:           { fontSize: 28, fontWeight: '800' },
+  bellBtn:        { width: 40, height: 40, backgroundColor: Colors.bg3, borderRadius: 20, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center', position: 'relative' },
+  bellDot:        { position: 'absolute', top: 6, right: 6, width: 8, height: 8, backgroundColor: Colors.red, borderRadius: 4 },
+  searchBar:      { flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.bg3, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 50, marginHorizontal: 16, marginBottom: 10, paddingLeft: 18, paddingRight: 6, height: 48 },
+  searchPlaceholder: { flex: 1, color: Colors.text3, fontSize: 15 },
+  filtresBtn:     { backgroundColor: Colors.purple, borderRadius: 22, paddingHorizontal: 14, paddingVertical: 8 },
+  filtresTxt:     { color: '#fff', fontSize: 13, fontWeight: '600' },
+  mapContainer:   { flex: 1, position: 'relative' },
+  loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(10,9,18,0.7)', alignItems: 'center', justifyContent: 'center', gap: 12 },
+  loadingText:    { color: Colors.text2, fontSize: 14 },
+  locBadge:       { position: 'absolute', top: 12, alignSelf: 'center', backgroundColor: 'rgba(18,15,32,0.9)', borderWidth: 1, borderColor: Colors.border, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 5 },
+  locBadgeText:   { color: Colors.text2, fontSize: 12 },
+  emptyMap:       { position: 'absolute', top: '40%', left: 24, right: 24, backgroundColor: 'rgba(18,15,32,0.9)', borderWidth: 1, borderColor: Colors.border, borderRadius: 16, padding: 20, alignItems: 'center' },
+  emptyText:      { color: Colors.text2, fontSize: 15, textAlign: 'center', lineHeight: 22 },
 })
 
-// ── Style carte sombre (compatible MapView) ──────────────────────
 const DARK_MAP_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#0d0b20' }] },
   { elementType: 'labels.text.fill', stylers: [{ color: '#6b628a' }] },

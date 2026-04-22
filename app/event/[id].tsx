@@ -2,21 +2,34 @@ import React, { useState, useEffect } from 'react'
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, SafeAreaView, ActivityIndicator,
-  Linking, Alert,
+  Linking, Alert, Image, Dimensions,
 } from 'react-native'
 import { useLocalSearchParams, router } from 'expo-router'
 import { LinearGradient } from 'expo-linear-gradient'
-
 import { supabase } from '../../lib/supabase'
 import { useAuthStore } from '../../stores/useAuthStore'
+import { useLocation } from '../../hooks/useLocation'
 import { Event, formatPrice, formatDistance, formatEventDate } from '../../hooks/useEvents'
 import { useFavorites } from '../../hooks/useFavorites'
 import { CATEGORIES } from '../../constants/categories'
 import { Colors } from '../../constants/theme'
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window')
+
+function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2)
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+}
+
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { profile } = useAuthStore()
+  const { location } = useLocation()
 
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
@@ -26,7 +39,6 @@ export default function EventDetailScreen() {
   const { isFavorite, toggleFavorite } = useFavorites()
   const isFav = event ? isFavorite(event.id) : false
 
-  // Charge l'event + incrémente les vues uniques
   useEffect(() => {
     if (!id) return
     supabase
@@ -37,7 +49,6 @@ export default function EventDetailScreen() {
       .then(({ data }) => {
         if (data) {
           setEvent(data as Event)
-          // Vue unique par user
           if (profile) {
             supabase
               .from('event_views')
@@ -68,6 +79,16 @@ export default function EventDetailScreen() {
           total_price: event.price * qty,
         })
       if (error) throw error
+      await supabase.from('notifications').insert({
+        user_id: profile.id,
+        title: 'Réservation confirmée',
+        subtitle: `${event.title} · Réf. ${ref}`,
+        type: 'reservation',
+        emoji: '✅',
+        emoji_bg: '#0F3D2A',
+        read: false,
+        event_id: event.id,
+      })
       router.push(`/confirmation?ref=${ref}`)
     } catch (e: any) {
       Alert.alert('Erreur', e.message ?? 'Impossible de réserver')
@@ -94,37 +115,71 @@ export default function EventDetailScreen() {
 
   const config = CATEGORIES[event.category]
   const totalPrice = event.price * qty
+  const photoUrls: string[] = ((event as any).photos ?? []).filter(
+    (url: string) => !url.toLowerCase().endsWith('.heic') && !url.toLowerCase().endsWith('.heif')
+  )
+  const distanceKm = event.lat && event.lng && location.lat && location.lng
+    ? calcDistance(location.lat, location.lng, event.lat, event.lng)
+    : undefined
 
   return (
     <View style={styles.container}>
       {/* Hero */}
-      <LinearGradient
-        colors={config?.colors ?? ['#1a1730', '#2d2850']}
-        style={styles.hero}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
+      <View style={styles.hero}>
+        {photoUrls.length > 0 ? (
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={{ position: 'absolute', top: 0, left: 0, width: SCREEN_WIDTH, height: 220 }}
+          >
+            {photoUrls.map((url, i) => (
+              <Image
+                key={i}
+                source={{ uri: url }}
+                style={{ width: SCREEN_WIDTH, height: 220 }}
+                resizeMode="cover"
+              />
+            ))}
+          </ScrollView>
+        ) : (
+          <LinearGradient
+            colors={config?.colors ?? ['#1a1730', '#2d2850']}
+            style={StyleSheet.absoluteFillObject}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          />
+        )}
+
         <SafeAreaView style={styles.heroTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Text style={{ color: Colors.text, fontSize: 18 }}>←</Text>
           </TouchableOpacity>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity style={styles.photoBtn}>
-              <Text style={styles.photoBtnTxt}>📷 3</Text>
-            </TouchableOpacity>
+            {photoUrls.length > 0 && (
+              <View style={styles.photoBtn}>
+                <Text style={styles.photoBtnTxt}>📷 {photoUrls.length}</Text>
+              </View>
+            )}
             <TouchableOpacity
               style={[styles.favBtn, isFav && styles.favBtnActive]}
               onPress={() => toggleFavorite(event.id, event)}
             >
-              <Text style={{ fontSize: 18 }}>{isFav ? '♥' : '♡'}</Text>
+              <Text style={{ fontSize: 18, color: isFav ? Colors.red : Colors.text }}>
+                {isFav ? '♥' : '♡'}
+              </Text>
             </TouchableOpacity>
           </View>
         </SafeAreaView>
-        <Text style={styles.heroEmoji}>{config?.emoji ?? '📍'}</Text>
+
+        {photoUrls.length === 0 && (
+          <Text style={styles.heroEmoji}>{config?.emoji ?? '📍'}</Text>
+        )}
+
         <View style={[styles.catBadge, { backgroundColor: 'rgba(0,0,0,0.3)' }]}>
           <Text style={{ fontSize: 20 }}>{config?.emoji}</Text>
         </View>
-      </LinearGradient>
+      </View>
 
       {/* Contenu */}
       <ScrollView
@@ -138,7 +193,7 @@ export default function EventDetailScreen() {
 
         <View style={styles.grid}>
           <InfoBox label="📅 Date" value={formatEventDate(event.date)} />
-          <InfoBox label="📍 Distance" value={formatDistance(event.distance_km)} />
+          <InfoBox label="📍 Distance" value={formatDistance(distanceKm)} />
           <InfoBox label="Prix / Place" value={formatPrice(event.price)} green={event.price === 0} />
           <InfoBox label="Places Dispo" value={event.capacity ? `${event.capacity} Places` : 'Illimités'} />
         </View>
@@ -217,15 +272,15 @@ function InfoBox({ label, value, green }: { label: string; value: string; green?
 const styles = StyleSheet.create({
   container:     { flex: 1, backgroundColor: Colors.bg },
   loader:        { flex: 1, backgroundColor: Colors.bg, alignItems: 'center', justifyContent: 'center' },
-  hero:          { height: 220, position: 'relative', justifyContent: 'center', alignItems: 'center' },
-  heroTop:       { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8 },
+  hero:          { height: 220, position: 'relative', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+  heroTop:       { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 8, zIndex: 10 },
   backBtn:       { width: 40, height: 40, backgroundColor: 'rgba(18,15,32,0.85)', borderRadius: 12, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
   photoBtn:      { backgroundColor: 'rgba(18,15,32,0.85)', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, borderWidth: 1, borderColor: Colors.border },
   photoBtnTxt:   { color: Colors.text, fontSize: 12 },
   favBtn:        { width: 40, height: 40, backgroundColor: 'rgba(18,15,32,0.85)', borderRadius: 10, borderWidth: 1, borderColor: Colors.border, alignItems: 'center', justifyContent: 'center' },
-  favBtnActive:  { backgroundColor: 'rgba(239,68,68,0.3)', borderColor: Colors.red },
-  heroEmoji:     { fontSize: 72 },
-  catBadge:      { position: 'absolute', bottom: 16, left: 20, width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  favBtnActive:  { borderColor: Colors.red },
+  heroEmoji:     { fontSize: 72, zIndex: 1 },
+  catBadge:      { position: 'absolute', bottom: 16, left: 20, width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', zIndex: 10 },
   body:          { padding: 20 },
   sup:           { fontSize: 11, fontWeight: '700', color: Colors.text3, letterSpacing: 1.5, textTransform: 'uppercase' },
   eventTitle:    { fontWeight: '800', fontSize: 26, color: Colors.text, marginTop: 6, marginBottom: 4, lineHeight: 30 },

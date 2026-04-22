@@ -31,6 +31,16 @@ interface UseEventsOptions {
   enabled?: boolean
 }
 
+interface UseEventsOptions {
+  lat: number
+  lng: number
+  category?: Category | null
+  onlyFree?: boolean
+  radiusKm?: number
+  enabled?: boolean
+  favoriteCats?: string[]
+}
+
 export function useEvents({
   lat,
   lng,
@@ -38,6 +48,7 @@ export function useEvents({
   onlyFree = false,
   radiusKm = 12,
   enabled = true,
+  favoriteCats = [],
 }: UseEventsOptions) {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,14 +67,25 @@ export function useEvents({
         only_free: onlyFree,
       })
       if (rpcError) throw rpcError
-      setEvents((data as Event[]) ?? [])
+
+      let result = (data as Event[]) ?? []
+
+      // Tri : catégories favorites en premier
+      if (favoriteCats.length > 0) {
+        result = [
+          ...result.filter(e => favoriteCats.includes(e.category)),
+          ...result.filter(e => !favoriteCats.includes(e.category)),
+        ]
+      }
+
+      setEvents(result)
     } catch (e: any) {
       setError(e.message ?? 'Erreur de chargement')
       setEvents([])
     } finally {
       setLoading(false)
     }
-  }, [lat, lng, category, onlyFree, radiusKm, enabled])
+  }, [lat, lng, category, onlyFree, radiusKm, enabled, favoriteCats])
 
   useEffect(() => {
     fetch()

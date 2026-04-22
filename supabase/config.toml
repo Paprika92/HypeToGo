@@ -1,0 +1,33 @@
+
+[functions.daily-orga-summary]
+enabled = true
+verify_jwt = true
+import_map = "./functions/daily-orga-summary/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/daily-orga-summary/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/daily-orga-summary/*.html" ]
+
+[functions.alert-low-capacity]
+enabled = true
+verify_jwt = true
+import_map = "./functions/alert-low-capacity/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/alert-low-capacity/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/alert-low-capacity/*.html" ]
+
+[functions.event-reminder]
+enabled = true
+verify_jwt = true
+import_map = "./functions/event-reminder/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/event-reminder/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/event-reminder/*.html" ]

@@ -1,4 +1,3 @@
-// Notifications orga — même logique que user, navbar orga différente
 import React, { useEffect, useState } from 'react'
 import {
   View, Text, ScrollView, TouchableOpacity,
@@ -10,42 +9,38 @@ import { useAuthStore } from '../../stores/useAuthStore'
 import { BottomNavbarOrga } from '../../components/BottomNavbarOrga'
 import { Colors } from '../../constants/theme'
 
-type NotifType = 'Concert' | 'Réservation' | 'Près de toi' | 'Alerte' | 'Avis' | 'Info'
-
 interface Notif {
   id: string
   title: string
   subtitle: string
-  time: string
-  type: NotifType
+  type: string
   read: boolean
   emoji: string
   emoji_bg: string
+  created_at: string
+  event_id?: string
 }
 
-const TYPE_STYLE: Record<NotifType, { badge_bg: string; badge_text: string; card_bg: string; border: string }> = {
-  'Concert':      { badge_bg: '#3A2870', badge_text: '#C4A8FF', card_bg: '#1A1240', border: '#3A2870' },
-  'Réservation':  { badge_bg: '#0F3D2A', badge_text: '#52D68A', card_bg: '#0A2018', border: '#1A5C3A' },
-  'Près de toi':  { badge_bg: '#2A1A60', badge_text: '#A78BFF', card_bg: '#180D40', border: '#3A2870' },
-  'Alerte':       { badge_bg: '#5C1A1A', badge_text: '#FF6B6B', card_bg: '#2A0808', border: '#7A2020' },
-  'Avis':         { badge_bg: '#4A3800', badge_text: '#FFD166', card_bg: '#201800', border: '#6A5200' },
-  'Info':         { badge_bg: '#1A1A35', badge_text: '#8888BB', card_bg: '#111128', border: '#2A2A45' },
+const TYPE_STYLE: Record<string, { badge_bg: string; badge_text: string; card_bg: string; border: string }> = {
+  'reservation': { badge_bg: '#0F3D2A', badge_text: '#52D68A', card_bg: '#0A2018', border: '#1A5C3A' },
+  'alert':       { badge_bg: '#5C1A1A', badge_text: '#FF6B6B', card_bg: '#2A0808', border: '#7A2020' },
+  'review':      { badge_bg: '#4A3800', badge_text: '#FFD166', card_bg: '#201800', border: '#6A5200' },
+  'info':        { badge_bg: '#1A1A35', badge_text: '#8888BB', card_bg: '#111128', border: '#2A2A45' },
+  'event':       { badge_bg: '#3A2870', badge_text: '#C4A8FF', card_bg: '#1A1240', border: '#3A2870' },
 }
 
-const MOCK_NOTIFS: Notif[] = [
-  { id: '1', title: 'Rappel — Ce soir !',       subtitle: "Daft Punk Tribute Night · L'Olympia",  time: 'Il y a 1h',  type: 'Concert',     read: false, emoji: '🎵', emoji_bg: '#3A2870' },
-  { id: '2', title: 'Réservation confirmée',    subtitle: 'PSG vs OM · Réf. HTG-D8E4C2',         time: 'Il y a 5h',  type: 'Réservation', read: false, emoji: '✅', emoji_bg: '#0F3D2A' },
-  { id: '3', title: 'Nouvel event près de toi', subtitle: "Bars Stand'art Café · Ménilmontant",  time: 'Il y a 3h',  type: 'Près de toi', read: false, emoji: '🔥', emoji_bg: '#2A1A60' },
-  { id: '4', title: 'Plus que 5 places !',      subtitle: 'Carmen — Bizet · Opéra Garnier',      time: 'Hier',       type: 'Alerte',      read: true,  emoji: '⚡', emoji_bg: '#5C1A1A' },
-  { id: '5', title: 'Donnez votre avis',        subtitle: 'Monet & Lumière — votre expérience ?',time: 'Hier',       type: 'Avis',        read: true,  emoji: '⭐', emoji_bg: '#4A3800' },
-  { id: '6', title: 'Concert près de toi',      subtitle: 'Networking tech · Paris 9e · Ce soir',time: 'Il y a 2 jours', type: 'Concert', read: true, emoji: '🎵', emoji_bg: '#3A2870' },
-]
+const TYPE_LABEL: Record<string, string> = {
+  'reservation': '🎟️ Réservation',
+  'alert':       '⚡ Alerte',
+  'review':      '⭐ Avis',
+  'info':        'ℹ️ Info',
+  'event':       '🎵 Event',
+}
 
 export default function NotificationsOrgaScreen() {
   const { profile } = useAuthStore()
   const [notifs, setNotifs] = useState<Notif[]>([])
   const [loading, setLoading] = useState(true)
-  const [useMock, setUseMock] = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -55,30 +50,40 @@ export default function NotificationsOrgaScreen() {
       .eq('user_id', profile.id)
       .order('created_at', { ascending: false })
       .then(({ data, error }) => {
-        if (error || !data || data.length === 0) {
-          setNotifs(MOCK_NOTIFS)
-          setUseMock(true)
-        } else {
-          setNotifs(data as Notif[])
-        }
+        setNotifs(error || !data ? [] : data as Notif[])
         setLoading(false)
       })
   }, [profile?.id])
 
-  const markRead = async (id: string) => {
-    setNotifs(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
-    if (!useMock) await supabase.from('notifications').update({ read: true }).eq('id', id)
+  const markRead = async (notif: Notif) => {
+    if (!notif.read) {
+      setNotifs(prev => prev.map(n => n.id === notif.id ? { ...n, read: true } : n))
+      await supabase.from('notifications').update({ read: true }).eq('id', notif.id)
+    }
+    if (notif.event_id) {
+      router.push(`/(orga)/edit-event/${notif.event_id}` as any)
+    }
   }
 
   const markAllRead = async () => {
     setNotifs(prev => prev.map(n => ({ ...n, read: true })))
-    if (!useMock && profile) await supabase.from('notifications').update({ read: true }).eq('user_id', profile.id)
+    if (profile) {
+      await supabase.from('notifications').update({ read: true }).eq('user_id', profile.id)
+    }
   }
 
-  const unreadCount  = notifs.filter(n => !n.read).length
-  const aujourd_hui  = notifs.filter(n => !n.read || n.time.includes('h'))
-  const hier         = notifs.filter(n => n.read && n.time === 'Hier')
-  const ancien       = notifs.filter(n => n.read && n.time.includes('jours'))
+  const unreadCount = notifs.filter(n => !n.read).length
+
+  const getSection = (n: Notif) => {
+    const h = (Date.now() - new Date(n.created_at).getTime()) / 3600000
+    if (h < 24) return 'today'
+    if (h < 48) return 'yesterday'
+    return 'older'
+  }
+
+  const today     = notifs.filter(n => getSection(n) === 'today')
+  const yesterday = notifs.filter(n => getSection(n) === 'yesterday')
+  const older     = notifs.filter(n => getSection(n) === 'older')
 
   return (
     <SafeAreaView style={s.safe}>
@@ -96,21 +101,43 @@ export default function NotificationsOrgaScreen() {
       <View style={s.divider} />
 
       {loading ? (
-        <View style={s.loader}><ActivityIndicator color={Colors.purpleLight} size="large" /></View>
+        <View style={s.loader}>
+          <ActivityIndicator color={Colors.purpleLight} size="large" />
+        </View>
       ) : (
         <ScrollView style={{ flex: 1 }} contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-          {aujourd_hui.length > 0 && <>
-            <Text style={s.sectionLabel}>AUJOURD'HUI{unreadCount > 0 ? ` · ${unreadCount} NON LUE${unreadCount > 1 ? 'S' : ''}` : ''}</Text>
-            {aujourd_hui.map(n => <NotifCard key={n.id} notif={n} onPress={() => markRead(n.id)} />)}
-          </>}
-          {hier.length > 0 && <>
-            <Text style={s.sectionLabel}>HIER</Text>
-            {hier.map(n => <NotifCard key={n.id} notif={n} onPress={() => markRead(n.id)} />)}
-          </>}
-          {ancien.length > 0 && <>
-            <Text style={s.sectionLabel}>PLUS ANCIEN</Text>
-            {ancien.map(n => <NotifCard key={n.id} notif={n} onPress={() => markRead(n.id)} />)}
-          </>}
+
+          {today.length > 0 && (
+            <>
+              <Text style={s.sectionLabel}>
+                AUJOURD'HUI{unreadCount > 0 ? ` · ${unreadCount} NON LUE${unreadCount > 1 ? 'S' : ''}` : ''}
+              </Text>
+              {today.map(n => <NotifCard key={n.id} notif={n} onPress={() => markRead(n)} />)}
+            </>
+          )}
+
+          {yesterday.length > 0 && (
+            <>
+              <Text style={s.sectionLabel}>HIER</Text>
+              {yesterday.map(n => <NotifCard key={n.id} notif={n} onPress={() => markRead(n)} />)}
+            </>
+          )}
+
+          {older.length > 0 && (
+            <>
+              <Text style={s.sectionLabel}>PLUS ANCIEN</Text>
+              {older.map(n => <NotifCard key={n.id} notif={n} onPress={() => markRead(n)} />)}
+            </>
+          )}
+
+          {notifs.length === 0 && (
+            <View style={s.empty}>
+              <Text style={s.emptyIcon}>🔔</Text>
+              <Text style={s.emptyTitle}>Aucune notification</Text>
+              <Text style={s.emptySub}>Tu seras notifié des nouvelles réservations</Text>
+            </View>
+          )}
+
           <View style={{ height: 24 }} />
         </ScrollView>
       )}
@@ -121,11 +148,19 @@ export default function NotificationsOrgaScreen() {
 }
 
 function NotifCard({ notif, onPress }: { notif: Notif; onPress: () => void }) {
-  const style = TYPE_STYLE[notif.type] ?? TYPE_STYLE['Info']
+  const style = TYPE_STYLE[notif.type] ?? TYPE_STYLE['info']
+  const h = (Date.now() - new Date(notif.created_at).getTime()) / 3600000
+  const timeAgo = h < 1 ? "Il y a moins d'1h" : h < 24 ? `Il y a ${Math.round(h)}h` : h < 48 ? 'Hier' : `Il y a ${Math.round(h / 24)}j`
+
   return (
     <TouchableOpacity
-      style={[s.card, { backgroundColor: notif.read ? '#111125' : style.card_bg }, !notif.read && { borderColor: style.border, borderWidth: 1 }]}
-      onPress={onPress} activeOpacity={0.8}
+      style={[
+        s.card,
+        { backgroundColor: notif.read ? '#111125' : style.card_bg },
+        !notif.read && { borderColor: style.border, borderWidth: 1 },
+      ]}
+      onPress={onPress}
+      activeOpacity={0.8}
     >
       {!notif.read && <View style={s.unreadDot} />}
       <View style={[s.iconBox, { backgroundColor: notif.emoji_bg }]}>
@@ -135,10 +170,13 @@ function NotifCard({ notif, onPress }: { notif: Notif; onPress: () => void }) {
         <Text style={s.cardTitle}>{notif.title}</Text>
         <Text style={s.cardSub} numberOfLines={1}>{notif.subtitle}</Text>
         <View style={s.cardMeta}>
-          <Text style={s.cardTime}>{notif.time}</Text>
+          <Text style={s.cardTime}>{timeAgo}</Text>
           <View style={[s.typeBadge, { backgroundColor: style.badge_bg }]}>
-            <Text style={[s.typeBadgeTxt, { color: style.badge_text }]}>{notif.type}</Text>
+            <Text style={[s.typeBadgeTxt, { color: style.badge_text }]}>
+              {TYPE_LABEL[notif.type] ?? notif.type}
+            </Text>
           </View>
+          {notif.event_id && <Text style={s.chevron}>→</Text>}
         </View>
       </View>
     </TouchableOpacity>
@@ -167,4 +205,9 @@ const s = StyleSheet.create({
   cardTime:     { fontSize: 11, color: 'rgba(255,255,255,0.25)' },
   typeBadge:    { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 20 },
   typeBadgeTxt: { fontSize: 10, fontWeight: '700' },
+  chevron:      { color: 'rgba(255,255,255,0.3)', fontSize: 12, marginLeft: 'auto' },
+  empty:        { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 80 },
+  emptyIcon:    { fontSize: 48, marginBottom: 16 },
+  emptyTitle:   { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  emptySub:     { color: 'rgba(255,255,255,0.4)', fontSize: 14, textAlign: 'center' },
 })
