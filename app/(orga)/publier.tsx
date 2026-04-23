@@ -59,6 +59,21 @@ async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
   } catch { return [] }
 }
 
+// ── Normalise tous les formats d'heure ──
+function normalizeHeure(h: string): string {
+  const cleaned = h.trim().toLowerCase().replace('h', ':')
+  if (/^\d{1,2}$/.test(cleaned)) return `${cleaned.padStart(2, '0')}:00`
+  if (/^\d{3,4}$/.test(cleaned)) {
+    const str = cleaned.padStart(4, '0')
+    return `${str.slice(0, 2)}:${str.slice(2)}`
+  }
+  if (/^\d{1,2}:\d{0,2}$/.test(cleaned)) {
+    const [hh, mm] = cleaned.split(':')
+    return `${hh.padStart(2, '0')}:${(mm || '00').padStart(2, '0')}`
+  }
+  return cleaned
+}
+
 export default function PublierScreen() {
   const { profile } = useAuthStore()
 
@@ -113,8 +128,53 @@ export default function PublierScreen() {
 
   const handlePublish = async () => {
     if (!profile) return
-    if (!title.trim() || !date.trim() || !heure.trim() || !lieu.trim() || !category) {
-      Alert.alert('Champs manquants', 'Titre, date, heure, lieu et catégorie sont obligatoires.')
+
+    // ── Validation champ par champ ──
+    if (!title.trim()) {
+      Alert.alert('Champ manquant', '✏️ Le titre de l\'évènement est obligatoire.')
+      return
+    }
+    if (!date.trim()) {
+      Alert.alert('Champ manquant', '📅 La date de l\'évènement est obligatoire.')
+      return
+    }
+    if (!heure.trim()) {
+      Alert.alert('Champ manquant', '🕐 L\'heure de l\'évènement est obligatoire.')
+      return
+    }
+    if (!lieu.trim()) {
+      Alert.alert('Champ manquant', '📍 Le lieu de l\'évènement est obligatoire.')
+      return
+    }
+    if (!category) {
+      Alert.alert('Champ manquant', '🏷️ Sélectionne une catégorie pour ton évènement.')
+      return
+    }
+
+    // ── Validation date ──
+    const parts = date.split(/[\/\-]/)
+    const day   = parts[0]?.padStart(2, '0')
+    const month = parts[1]?.padStart(2, '0')
+    const year  = parts[2]
+    const heureNormalized = normalizeHeure(heure)
+    const eventDate = new Date(`${year}-${month}-${day}T${heureNormalized}`)
+    const now = new Date()
+    const diffDays = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+
+    if (isNaN(eventDate.getTime())) {
+      Alert.alert('Date invalide', '📅 Vérifie le format de la date (jj/mm/aaaa) et l\'heure (20h, 20h30, 20:00...)')
+      return
+    }
+    if (eventDate < now) {
+      Alert.alert('Date invalide', '📅 La date de l\'évènement doit être dans le futur.')
+      return
+    }
+    if (diffDays > 7) {
+      Alert.alert(
+        '⚡ HypeToGo — App de la spontanéité',
+        'Tu ne peux publier un évènement qu\'à 7 jours maximum à l\'avance.\n\nReviens plus près de la date pour le publier !',
+        [{ text: 'OK compris', style: 'cancel' }]
+      )
       return
     }
 
@@ -130,11 +190,7 @@ export default function PublierScreen() {
         if (coords) { lat = coords.lat; lng = coords.lng }
       }
 
-      const parts = date.split(/[\/\-]/)
-      const day   = parts[0]?.padStart(2, '0')
-      const month = parts[1]?.padStart(2, '0')
-      const year  = parts[2]
-      const isoDate = `${year}-${month}-${day}T${heure}:00+02:00`
+      const isoDate = `${year}-${month}-${day}T${heureNormalized}:00+02:00`
 
       const { error } = await supabase.from('events').insert({
         organizer_id:  profile.id,
@@ -153,7 +209,7 @@ export default function PublierScreen() {
       if (error) throw error
 
       Alert.alert('✅ Publié !', 'Ton évènement est visible sur la carte !', [
-        { text: 'Voir mes events', onPress: () => router.push('/(orga)/events' as any) },
+        { text: 'OK', onPress: () => router.back() },
       ])
     } catch (e: any) {
       Alert.alert('Erreur', e.message ?? 'Impossible de publier')
@@ -301,7 +357,6 @@ export default function PublierScreen() {
           autoCapitalize="none"
         />
 
-        {/* Photos avec vrai upload */}
         <Text style={s.label}>Photos de l'évènement</Text>
         <PhotoPicker
           photos={photos}

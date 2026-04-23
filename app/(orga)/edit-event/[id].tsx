@@ -13,10 +13,8 @@ import { ALL_CATEGORIES, CATEGORIES } from '../../../constants/categories'
 import { Category } from '../../../hooks/useEvents'
 import { PhotoPicker } from '../../../components/PhotoPicker'
 
-
 const PARIS_LAT = 48.8566
 const PARIS_LNG = 2.3522
-
 
 interface AddressSuggestion {
   display_name: string
@@ -46,6 +44,20 @@ async function searchAddresses(query: string): Promise<AddressSuggestion[]> {
   } catch { return [] }
 }
 
+function normalizeHeure(h: string): string {
+  const cleaned = h.trim().toLowerCase().replace('h', ':')
+  if (/^\d{1,2}$/.test(cleaned)) return `${cleaned.padStart(2, '0')}:00`
+  if (/^\d{3,4}$/.test(cleaned)) {
+    const str = cleaned.padStart(4, '0')
+    return `${str.slice(0, 2)}:${str.slice(2)}`
+  }
+  if (/^\d{1,2}:\d{0,2}$/.test(cleaned)) {
+    const [hh, mm] = cleaned.split(':')
+    return `${hh.padStart(2, '0')}:${(mm || '00').padStart(2, '0')}`
+  }
+  return cleaned
+}
+
 export default function EditEventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { profile } = useAuthStore()
@@ -58,7 +70,7 @@ export default function EditEventScreen() {
   const [selectedLat, setSelectedLat]   = useState<number | null>(null)
   const [selectedLng, setSelectedLng]   = useState<number | null>(null)
   const [suggestions, setSuggestions]   = useState<AddressSuggestion[]>([])
-  const [showSuggestions, setShowSuggestions]     = useState(false)
+  const [showSuggestions, setShowSuggestions]       = useState(false)
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [category, setCategory]         = useState<Category | null>(null)
   const [description, setDesc]          = useState('')
@@ -134,19 +146,61 @@ export default function EditEventScreen() {
 
   const handleUpdate = async () => {
     if (!profile || !id) return
-    if (!title.trim() || !date.trim() || !heure.trim() || !lieu.trim() || !category) {
-      Alert.alert('Champs manquants', 'Titre, date, heure, lieu et catégorie sont obligatoires.')
+
+    // ── Validation champ par champ ──
+    if (!title.trim()) {
+      Alert.alert('Champ manquant', '✏️ Le titre de l\'évènement est obligatoire.')
       return
     }
+    if (!date.trim()) {
+      Alert.alert('Champ manquant', '📅 La date de l\'évènement est obligatoire.')
+      return
+    }
+    if (!heure.trim()) {
+      Alert.alert('Champ manquant', '🕐 L\'heure de l\'évènement est obligatoire.')
+      return
+    }
+    if (!lieu.trim()) {
+      Alert.alert('Champ manquant', '📍 Le lieu de l\'évènement est obligatoire.')
+      return
+    }
+    if (!category) {
+      Alert.alert('Champ manquant', '🏷️ Sélectionne une catégorie pour ton évènement.')
+      return
+    }
+
+    // ── Validation date ──
+    const parts = date.split(/[\/\-]/)
+    const day   = parts[0]?.padStart(2, '0')
+    const month = parts[1]?.padStart(2, '0')
+    const year  = parts[2]
+    const heureNormalized = normalizeHeure(heure)
+    const eventDate = new Date(`${year}-${month}-${day}T${heureNormalized}`)
+    const now = new Date()
+    const diffDays = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+
+    if (isNaN(eventDate.getTime())) {
+      Alert.alert('Date invalide', '📅 Vérifie le format de la date (jj/mm/aaaa) et l\'heure.')
+      return
+    }
+    if (eventDate < now) {
+      Alert.alert('Date invalide', '📅 La date de l\'évènement doit être dans le futur.')
+      return
+    }
+    if (diffDays > 7) {
+      Alert.alert(
+        '⚡ HypeToGo — App de la spontanéité',
+        'Tu ne peux publier un évènement qu\'à 7 jours maximum à l\'avance.\n\nReviens plus près de la date pour le publier !',
+        [{ text: 'OK compris', style: 'cancel' }]
+      )
+      return
+    }
+
     setLoading(true)
     try {
-      const lat   = selectedLat ?? PARIS_LAT
-      const lng   = selectedLng ?? PARIS_LNG
-      const parts = date.split(/[\/\-]/)
-      const day   = parts[0]?.padStart(2, '0')
-      const month = parts[1]?.padStart(2, '0')
-      const year  = parts[2]
-      const isoDate = `${year}-${month}-${day}T${heure}:00+02:00`
+      const lat = selectedLat ?? PARIS_LAT
+      const lng = selectedLng ?? PARIS_LNG
+      const isoDate = `${year}-${month}-${day}T${heureNormalized}:00+02:00`
 
       const { error } = await supabase
         .from('events')
@@ -165,8 +219,9 @@ export default function EditEventScreen() {
         .eq('organizer_id', profile.id)
 
       if (error) throw error
+
       Alert.alert('✅ Mis à jour !', 'Ton évènement a bien été modifié.', [
-        { text: 'Voir mes events', onPress: () => router.push('/(orga)/events' as any) },
+        { text: 'OK', onPress: () => router.back() },
       ])
     } catch (e: any) {
       Alert.alert('Erreur', e.message ?? 'Impossible de modifier')
@@ -186,7 +241,7 @@ export default function EditEventScreen() {
           style: 'destructive',
           onPress: async () => {
             await supabase.from('events').delete().eq('id', id).eq('organizer_id', profile!.id)
-            router.push('/(orga)/events' as any)
+            router.back()
           },
         },
       ]
@@ -241,7 +296,7 @@ export default function EditEventScreen() {
             <Text style={s.label}>Heure *</Text>
             <TextInput
               style={s.input}
-              placeholder="--:--"
+              placeholder="--h--"
               placeholderTextColor="rgba(255,255,255,0.2)"
               value={heure}
               onChangeText={setHeure}
